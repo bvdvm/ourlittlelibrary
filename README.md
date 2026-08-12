@@ -61,22 +61,25 @@ Potem w ustawieniach repo → Pages → wybierz branch `main` / folder root.
 
 ## Jak jest zorganizowany kod
 
+Ta wersja jest **bez podfolderów** — wszystkie pliki leżą razem, żeby dało się je wrzucić
+na GitHub bez odtwarzania struktury katalogów:
+
 ```
 index.html            szkielet strony, zakładki-bookmarki jako nawigacja
-css/style.css          cały wygląd (czarno-złoto-srebrny motyw)
-js/config.js            <- TU wklejasz Firebase config i (opcjonalnie) klucz Google Books
-js/criteria-data.js     19 kryteriów oceniania (uniwersalne + bonusowe wg gatunku), z notatek
-js/rating.js             liczenie % / gwiazdek / poziomu zakładki
-js/store.js               warstwa danych: Firestore albo tryb demo, ten sam interfejs
-js/books-api.js          wyszukiwanie w Google Books
-js/demo-data.js          przykładowe książki widoczne w trybie demo
-js/ui-rate.js             panel „Oceń” — szukaj/dodaj/oceń
-js/ui-sagas.js            panel „Sagi”
-js/ui-ranking.js          panel „Ranking”
-js/ui-tbr.js               panel „TBR”
-js/ui-draw.js              panel „Losowanie”
-js/app.js                  spina wszystko, przełącza zakładki
-assets/logo.png          Wasze logo
+style.css               cały wygląd (czarno-złoto-srebrny motyw)
+config.js                <- TU wklejasz Firebase config i (opcjonalnie) klucz Google Books
+criteria-data.js       19 kryteriów oceniania (uniwersalne + bonusowe wg gatunku), z notatek
+rating.js                liczenie % / gwiazdek / poziomu zakładki
+store.js                  warstwa danych: Firestore albo tryb demo, ten sam interfejs
+books-api.js            wyszukiwanie w Google Books
+demo-data.js            przykładowe książki widoczne w trybie demo
+ui-rate.js                panel „Oceń” — szukaj/dodaj/oceń
+ui-sagas.js              panel „Sagi”
+ui-ranking.js            panel „Ranking”
+ui-tbr.js                  panel „TBR”
+ui-draw.js                panel „Losowanie”
+app.js                     spina wszystko, przełącza zakładki
+logo.png                 Wasze logo
 ```
 
 Model danych jest celowo prosty — **jedna kolekcja `books`** obsługuje i TBR, i przeczytane
