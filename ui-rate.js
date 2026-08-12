@@ -1,24 +1,27 @@
 import { searchBooks } from './books-api.js';
 import { ALL_GENRES, FORMATS } from './criteria-data.js';
 import { criteriaForGenres, calcRating, starsToString } from './rating.js';
-import { USERS } from './config.js';
-import { addBook, updateBook } from './store.js';
+import { USERS, READ_STATUSES } from './config.js';
+import { addBook, updateBook, addSaga } from './store.js';
 
 let getBooks = () => [];
+let getSagas = () => [];
 let draft = null;        // książka w trakcie edycji
 let draftScores = {};    // { karolina: {critId: pts}, ola: {critId: pts} }
 let activeUser = USERS[0].id;
 
 function blankDraft() {
   return {
-    id: null, title: '', author: '', coverUrl: '', googleBooksId: '', isbn: '',
-    genres: [], format: null, saga: null, status: 'tbr', addedBy: USERS[0].id,
+    id: null, title: '', author: '', coverUrl: '', sourceId: '', isbn: '',
+    genres: [], format: null, saga: null, addedBy: USERS[0].id,
+    readStatus: { [USERS[0].id]: 'tbr', [USERS[1].id]: 'tbr' },
     wantToRead: {}, ratings: { [USERS[0].id]: null, [USERS[1].id]: null },
   };
 }
 
-export function initRatePanel(booksGetter) {
+export function initRatePanel(booksGetter, sagasGetter) {
   getBooks = booksGetter;
+  getSagas = sagasGetter;
   const searchInput = document.getElementById('bookSearch');
   const resultsBox = document.getElementById('searchResults');
   const manualBtn = document.getElementById('manualAddBtn');
@@ -34,7 +37,8 @@ export function initRatePanel(booksGetter) {
         const results = await searchBooks(q);
         renderSearchResults(results, resultsBox);
       } catch (err) {
-        resultsBox.innerHTML = '<p class="empty-note">Nie udało się połączyć z Google Books. Możesz dodać książkę ręcznie.</p>';
+        console.error('Google Books search failed:', err);
+        resultsBox.innerHTML = '<p class="empty-note">Nie udało się połączyć z Google Books. Możesz dodać książkę ręcznie.<br><span style="opacity:.7;">Szczegóły błędu: konsola przeglądarki (F12).</span></p>';
       }
     }, 380);
   });
@@ -51,11 +55,12 @@ export function initRatePanel(booksGetter) {
 export function refreshTbrShortcut() {
   const host = document.getElementById('tbrShortcut');
   if (!host) return;
-  const tbrBooks = getBooks().filter(b => b.status === 'tbr' || b.status === 'w trakcie');
-  if (tbrBooks.length === 0 || draft) { host.innerHTML = ''; return; }
-  host.innerHTML = `<div class="card" style="margin-bottom:20px;"><label>Masz w TBR — oceń teraz</label><div class="chip-row" style="margin-top:8px;"></div></div>`;
+  // książki, które choć jedna z Was jeszcze nie skończyła
+  const pending = getBooks().filter(b => Object.values(b.readStatus || {}).some(s => s !== 'przeczytana'));
+  if (pending.length === 0 || draft) { host.innerHTML = ''; return; }
+  host.innerHTML = `<div class="card" style="margin-bottom:20px;"><label>Masz książki w trakcie / do przeczytania — oceń teraz</label><div class="chip-row" style="margin-top:8px;"></div></div>`;
   const row = host.querySelector('.chip-row');
-  tbrBooks.forEach(b => {
+  pending.forEach(b => {
     const chip = document.createElement('button');
     chip.className = 'chip'; chip.type = 'button'; chip.textContent = b.title;
     chip.addEventListener('click', () => startDraft(JSON.parse(JSON.stringify(b))));
@@ -76,7 +81,7 @@ function renderSearchResults(results, box) {
     `;
     el.addEventListener('click', () => {
       const d = blankDraft();
-      Object.assign(d, { title: r.title, author: r.author, coverUrl: r.coverUrl, googleBooksId: r.googleBooksId, isbn: r.isbn });
+      Object.assign(d, { title: r.title, author: r.author, coverUrl: r.coverUrl, sourceId: r.sourceId, isbn: r.isbn });
       box.innerHTML = '';
       document.getElementById('bookSearch').value = '';
       startDraft(d);
@@ -87,6 +92,7 @@ function renderSearchResults(results, box) {
 
 function startDraft(book) {
   draft = book;
+  if (!draft.readStatus) draft.readStatus = { [USERS[0].id]: 'tbr', [USERS[1].id]: 'tbr' };
   draftScores = {
     [USERS[0].id]: draft.ratings?.[USERS[0].id]?.scores ? { ...draft.ratings[USERS[0].id].scores } : {},
     [USERS[1].id]: draft.ratings?.[USERS[1].id]?.scores ? { ...draft.ratings[USERS[1].id].scores } : {},
@@ -98,7 +104,6 @@ function startDraft(book) {
 function renderForm() {
   const container = document.getElementById('bookFormContainer');
   if (!draft) { container.innerHTML = ''; return; }
-  const existingSagas = [...new Set(getBooks().map(b => b.saga).filter(Boolean))];
 
   container.innerHTML = `
     <div class="book-form card">
@@ -111,29 +116,23 @@ function renderForm() {
       </div>
 
       <div class="two-col">
-        <div class="field-row">
-          <label>Status</label>
-          <div class="status-toggle">
-            <button type="button" class="chip status-chip" data-status="tbr">do przeczytania</button>
-            <button type="button" class="chip status-chip" data-status="w trakcie">w trakcie</button>
-            <button type="button" class="chip status-chip" data-status="przeczytana">przeczytana</button>
-          </div>
-        </div>
         <div class="field-row saga-field">
           <label for="f-saga">Saga (opcjonalnie)</label>
-          <input type="text" id="f-saga" placeholder="np. Imperium Piorunów" value="${escapeAttr(draft.saga || '')}" autocomplete="off" />
-          <div class="saga-suggestions" id="sagaSuggestions" hidden></div>
+          <select id="f-saga"></select>
+          <div id="newSagaRow" style="display:flex;gap:6px;margin-top:6px;">
+            <input type="text" id="f-new-saga" placeholder="+ nowa saga…" />
+            <button type="button" class="btn btn-sm" id="addSagaInlineBtn">Dodaj</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Format</label>
+          <div class="chip-row" id="formatChips"></div>
         </div>
       </div>
 
       <div class="field-row">
         <label>Gatunek</label>
         <div class="chip-row" id="genreChips"></div>
-      </div>
-
-      <div class="field-row">
-        <label>Format</label>
-        <div class="chip-row" id="formatChips"></div>
       </div>
 
       <div id="raterBlock"></div>
@@ -148,25 +147,18 @@ function renderForm() {
   document.getElementById('f-title').addEventListener('input', e => draft.title = e.target.value);
   document.getElementById('f-author').addEventListener('input', e => draft.author = e.target.value);
 
-  // status
-  const statusChips = [...container.querySelectorAll('.status-chip')];
-  const syncStatus = () => statusChips.forEach(c => c.classList.toggle('active', c.dataset.status === draft.status));
-  statusChips.forEach(c => c.addEventListener('click', () => { draft.status = c.dataset.status; syncStatus(); renderRaterBlock(); }));
-  syncStatus();
-
-  // saga autocomplete
-  const sagaInput = document.getElementById('f-saga');
-  const sagaBox = document.getElementById('sagaSuggestions');
-  sagaInput.addEventListener('input', () => {
-    draft.saga = sagaInput.value || null;
-    const q = sagaInput.value.trim().toLowerCase();
-    const matches = q ? existingSagas.filter(s => s.toLowerCase().includes(q)) : [];
-    if (matches.length === 0) { sagaBox.hidden = true; return; }
-    sagaBox.hidden = false;
-    sagaBox.innerHTML = matches.map(s => `<button type="button" data-saga="${escapeAttr(s)}">${escapeHtml(s)}</button>`).join('');
-    sagaBox.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-      sagaInput.value = b.dataset.saga; draft.saga = b.dataset.saga; sagaBox.hidden = true;
-    }));
+  // saga select
+  populateSagaSelect();
+  document.getElementById('f-saga').addEventListener('change', e => { draft.saga = e.target.value || null; });
+  document.getElementById('addSagaInlineBtn').addEventListener('click', async () => {
+    const input = document.getElementById('f-new-saga');
+    const name = input.value.trim();
+    if (!name) return;
+    const exists = getSagas().find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (!exists) await addSaga(name);
+    draft.saga = name;
+    input.value = '';
+    populateSagaSelect();
   });
 
   // genre chips
@@ -203,21 +195,30 @@ function renderForm() {
   renderRaterBlock();
 }
 
+function populateSagaSelect() {
+  const select = document.getElementById('f-saga');
+  if (!select) return;
+  const sagas = getSagas();
+  select.innerHTML = '<option value="">— brak sagi —</option>' +
+    sagas.map(s => `<option value="${escapeAttr(s.name)}" ${draft.saga === s.name ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+}
+
 function renderRaterBlock() {
   const block = document.getElementById('raterBlock');
   if (!block) return;
-  if (draft.status !== 'przeczytana') {
-    block.innerHTML = `<p class="empty-note" style="margin-top:10px;">Ocenianie odblokuje się, gdy oznaczysz książkę jako przeczytaną.</p>`;
-    return;
-  }
   const criteria = criteriaForGenres(draft.genres);
+
   block.innerHTML = `
     <div class="rater-block">
       <div class="rater-user-tabs" id="raterUserTabs"></div>
-      <div id="criteriaList"></div>
-      <div class="rating-summary" id="ratingSummary"></div>
+      <div class="field-row" style="margin-top:2px;">
+        <label>Status (${USERS.find(u => u.id === activeUser).label})</label>
+        <div class="status-toggle" id="statusToggle"></div>
+      </div>
+      <div id="criteriaArea"></div>
     </div>
   `;
+
   const userTabs = document.getElementById('raterUserTabs');
   USERS.forEach(u => {
     const chip = document.createElement('button');
@@ -228,9 +229,28 @@ function renderRaterBlock() {
     userTabs.appendChild(chip);
   });
 
+  const statusBox = document.getElementById('statusToggle');
+  READ_STATUSES.forEach(s => {
+    const chip = document.createElement('button');
+    chip.type = 'button'; chip.className = 'chip';
+    chip.textContent = s.label;
+    chip.classList.toggle('active', draft.readStatus[activeUser] === s.id);
+    chip.addEventListener('click', () => {
+      draft.readStatus[activeUser] = s.id;
+      renderRaterBlock();
+    });
+    statusBox.appendChild(chip);
+  });
+
+  const area = document.getElementById('criteriaArea');
+  if (draft.readStatus[activeUser] !== 'przeczytana') {
+    area.innerHTML = `<p class="empty-note" style="margin-top:10px;">Ocenianie odblokuje się, gdy ${USERS.find(u => u.id === activeUser).label} oznaczy książkę jako przeczytaną.</p>`;
+    return;
+  }
+  area.innerHTML = `<div id="criteriaList"></div><div class="rating-summary" id="ratingSummary"></div>`;
   const list = document.getElementById('criteriaList');
   criteria.forEach(c => list.appendChild(renderCriterionRow(c)));
-  updateSummary(criteria);
+  updateSummary();
 }
 
 function renderCriterionRow(crit) {
@@ -253,14 +273,14 @@ function renderCriterionRow(crit) {
       draftScores[activeUser][crit.id] = p;
       row.querySelector('.c-level-text').textContent = crit.levels[p - 1];
       [...picker.children].forEach((b, i) => b.classList.toggle('active', i + 1 === p));
-      updateSummary(criteriaForGenres(draft.genres));
+      updateSummary();
     });
     picker.appendChild(btn);
   }
   return row;
 }
 
-function updateSummary(criteria) {
+function updateSummary() {
   const box = document.getElementById('ratingSummary');
   if (!box) return;
   const result = calcRating(draftScores[activeUser], draft.genres);
@@ -286,14 +306,15 @@ async function saveDraft() {
   if (!draft.title.trim()) { alert('Podaj tytuł książki.'); return; }
   const ratings = { ...draft.ratings };
   USERS.forEach(u => {
+    if (draft.readStatus[u.id] !== 'przeczytana') { ratings[u.id] = draft.ratings[u.id] || null; return; }
     const result = calcRating(draftScores[u.id], draft.genres);
     ratings[u.id] = result ? { scores: draftScores[u.id], percent: result.percent, stars: result.stars, tierId: result.tier.id } : (draft.ratings[u.id] || null);
   });
   const payload = {
     title: draft.title.trim(), author: draft.author.trim() || 'Autor nieznany',
-    coverUrl: draft.coverUrl || '', googleBooksId: draft.googleBooksId || '', isbn: draft.isbn || '',
+    coverUrl: draft.coverUrl || '', sourceId: draft.sourceId || '', isbn: draft.isbn || '',
     genres: draft.genres, format: draft.format, saga: draft.saga || null,
-    status: draft.status, addedBy: draft.addedBy, wantToRead: draft.wantToRead || {}, ratings,
+    readStatus: draft.readStatus, addedBy: draft.addedBy, wantToRead: draft.wantToRead || {}, ratings,
   };
   if (draft.id) await updateBook(draft.id, payload);
   else await addBook(payload);

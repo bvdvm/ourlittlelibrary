@@ -45,7 +45,7 @@
       <p>Znajdź książkę, zaznacz gatunek i format, a resztę policzymy same.</p>
     </div>
     <div class="search-box">
-      <label for="bookSearch">Szukaj książki (Google Books)</label>
+      <label for="bookSearch">Szukaj książki (Open Library)</label>
       <input type="search" id="bookSearch" placeholder="np. Trzecie skrzydło" autocomplete="off" />
       <div class="search-results" id="searchResults"></div>
       <div class="manual-toggle"><button id="manualAddBtn" type="button">nie ma na liście? dodaj ręcznie</button></div>
@@ -60,17 +60,24 @@
       <p>Kolekcje książek z tej samej serii, ze wspólną średnią oceną.</p>
     </div>
     <div class="grid grid-2" id="sagaGrid"></div>
+    <div class="card" style="max-width:420px;margin:24px auto 0;">
+      <label for="newSagaName">Nowa saga</label>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <input type="text" id="newSagaName" placeholder="np. Imperium Piorunów" />
+        <button class="btn btn-gold btn-sm" id="addSagaBtn">Dodaj</button>
+      </div>
+    </div>
   </section>
 
   <section id="panel-ranking" class="panel">
     <div class="panel-head">
       <h2>Ranking</h2>
-      <p>Wspólny, mój i Oli — filtrowany po gatunku.</p>
+      <p>Wspólny, Karoliny i Oli — filtrowany po gatunku.</p>
     </div>
     <div class="ranking-controls">
       <div class="chip-row" id="rankingUserTabs">
         <button class="chip active" data-user="wspolny">Wspólny</button>
-        <button class="chip" data-user="karolina">Mój</button>
+        <button class="chip" data-user="karolina">Karolina</button>
         <button class="chip" data-user="ola">Oli</button>
       </div>
       <select id="rankingGenreFilter">

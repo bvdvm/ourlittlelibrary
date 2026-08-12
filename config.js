@@ -23,6 +23,7 @@ export const firebaseConfig = {
 export const COLLECTIONS = {
   books: 'library_books',
   pickLists: 'library_pickLists',
+  sagas: 'library_sagas',
 };
 
 // 2) UŻYTKOWNICZKI apki — na razie proste przełączanie "kim jestem"
@@ -32,10 +33,12 @@ export const USERS = [
   { id: 'ola', label: 'Ola', emoji: '☀️', color: 'var(--gold)' },
 ];
 
-// 3) GOOGLE BOOKS API — odpowiednik TMDB dla książek.
-//    Działa BEZ klucza (darmowe zapytania publiczne, ograniczony limit),
-//    ale z własnym kluczem masz wyższy limit zapytań dziennie.
-//    Klucz zrobisz w Google Cloud Console -> APIs & Services -> Credentials
-//    -> Create credentials -> API key, i włącz "Books API" w bibliotece API.
-//    Zostaw puste, jeśli chcesz na razie działać bez klucza.
-export const GOOGLE_BOOKS_API_KEY = '';
+// 3) WYSZUKIWARKA KSIĄŻEK — Open Library (openlibrary.org), odpowiednik TMDB
+//    dla książek. W pełni darmowe, bez klucza, bez limitu do skonfigurowania.
+
+// Statusy przeczytania — osobne dla każdej osoby (jedna może skończyć, druga jeszcze nie)
+export const READ_STATUSES = [
+  { id: 'tbr', label: 'do przeczytania' },
+  { id: 'w trakcie', label: 'w trakcie' },
+  { id: 'przeczytana', label: 'przeczytana' },
+];

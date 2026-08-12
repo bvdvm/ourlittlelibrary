@@ -6,46 +6,28 @@ strona + Firebase Firestore jako baza, zero backendu do utrzymania.
 
 ## Firebase już podpięty
 
-`js/config.js` ma już wpisany config projektu **seans-cc-poznan** (ten sam, którego używa
-KINEAPOLIS). Apka pisze do dwóch nowych kolekcji — `library_books` i `library_pickLists` —
-z przedrostkiem `library_`, więc nie ruszają danych filmowych KINEAPOLIS w tym samym projekcie.
-Kolekcje utworzą się same przy pierwszym zapisie, nie trzeba nic klikać w konsoli.
+`config.js` ma już wpisany config projektu **seans-cc-poznan** (ten sam, którego używa
+KINEAPOLIS). Apka pisze do trzech nowych kolekcji — `library_books`, `library_pickLists`
+i `library_sagas` — z przedrostkiem `library_`, więc nie ruszają danych filmowych KINEAPOLIS
+w tym samym projekcie. Kolekcje utworzą się same przy pierwszym zapisie.
 
-**Jedyna rzecz do zrobienia ręcznie:** dodaj regułę w Firestore → Rules, żeby te dwie
-kolekcje w ogóle dało się czytać/zapisywać (tak jak masz już dla kolekcji filmowych).
-Najprostsza wersja, do wklejenia obok istniejących reguł:
+**Reguły Firestore:** jeśli już wcześniej dodałeś regułę `match /{document=**} { allow read,
+write: if true; }` (albo masz taką ogólną regułę od początku) — nic nie musisz robić, ona
+i tak obejmuje też `library_sagas`. Dopisywanie osobnych `match` dla każdej kolekcji ma sens
+tylko wtedy, gdy reguły są bardziej selektywne (np. wymieniają kolekcje z osobna).
 
-```
-match /library_books/{bookId} {
-  allow read, write: if true;
-}
-match /library_pickLists/{listId} {
-  allow read, write: if true;
-}
-```
-
-To jest reguła bez logowania — tak jak KINEAPOLIS, każdy ze znajomym linkiem może
-czytać i zapisywać. Jeśli KINEAPOLIS ma coś bardziej restrykcyjnego (np. sprawdzanie
-tokena), skopiuj ten sam wzorzec dla obu nowych kolekcji zamiast `if true`.
-
-Dopóki `js/config.js` nie ma poprawnego configu, apka sama przechodzi w **tryb demo**
+Dopóki `config.js` nie ma poprawnego configu, apka sama przechodzi w **tryb demo**
 (przykładowe książki, nic się nie zapisuje) — ale teraz to już nieaktualne, config jest
 wpięty na prawdziwe dane.
 
-## (Opcjonalnie) Klucz do Google Books API
+## Wyszukiwarka książek — Open Library
 
-Wyszukiwarka książek przy dodawaniu działa **od razu, bez klucza** (darmowe zapytania
-publiczne), ale ma niższy dzienny limit. Jeśli zaczniecie częściej dodawać książki:
-
-1. [Google Cloud Console](https://console.cloud.google.com/) → nowy projekt (albo dowolny istniejący).
-2. APIs & Services → Library → włącz **Books API**.
-3. APIs & Services → Credentials → Create credentials → API key.
-4. Wklej klucz do `GOOGLE_BOOKS_API_KEY` w `js/config.js`.
-
-Czemu Google Books, a nie coś innego? To najbliższy odpowiednik TMDB dla książek — darmowe
-wyszukiwanie po tytule/autorze, okładki, rok wydania, kategorie, bez logowania. Open Library
-to solidna darmowa alternatywa (więcej starszych/niszowych tytułów), ale Google Books ma
-zdecydowanie lepsze i bardziej kompletne okładki, więc jest wpięty jako główne źródło.
+Wyszukiwarka przy dodawaniu książki korzysta z [Open Library](https://openlibrary.org)
+(projekt Internet Archive) — to darmowy odpowiednik TMDB dla książek: bez klucza, bez
+logowania, bez limitu do skonfigurowania. Ma słabsze okładki niż Google Books przy bardzo
+nowych/niszowych wydaniach, za to świetną bazę starszych i mniej popularnych tytułów.
+Jeśli jakiejś książki nie znajdzie, zawsze można dodać ją ręcznie ("nie ma na liście?
+dodaj ręcznie").
 
 ## Wrzuć na GitHub Pages
 
@@ -61,42 +43,50 @@ Potem w ustawieniach repo → Pages → wybierz branch `main` / folder root.
 
 ## Jak jest zorganizowany kod
 
-Ta wersja jest **bez podfolderów** — wszystkie pliki leżą razem, żeby dało się je wrzucić
-na GitHub bez odtwarzania struktury katalogów:
+Ta wersja jest **bez podfolderów** — wszystkie pliki leżą razem.
 
 ```
 index.html            szkielet strony, zakładki-bookmarki jako nawigacja
-style.css               cały wygląd (czarno-złoto-srebrny motyw)
-config.js                <- TU wklejasz Firebase config i (opcjonalnie) klucz Google Books
-criteria-data.js       19 kryteriów oceniania (uniwersalne + bonusowe wg gatunku), z notatek
-rating.js                liczenie % / gwiazdek / poziomu zakładki
-store.js                  warstwa danych: Firestore albo tryb demo, ten sam interfejs
-books-api.js            wyszukiwanie w Google Books
-demo-data.js            przykładowe książki widoczne w trybie demo
-ui-rate.js                panel „Oceń” — szukaj/dodaj/oceń
-ui-sagas.js              panel „Sagi”
-ui-ranking.js            panel „Ranking”
-ui-tbr.js                  panel „TBR”
-ui-draw.js                panel „Losowanie”
-app.js                     spina wszystko, przełącza zakładki
-logo.png                 Wasze logo
+style.css          cały wygląd (czarno-złoto-srebrny motyw)
+config.js            <- TU wklejasz Firebase config
+criteria-data.js     19 kryteriów oceniania (uniwersalne + bonusowe wg gatunku), z notatek
+rating.js             liczenie % / gwiazdek / poziomu zakładki
+store.js               warstwa danych: Firestore albo tryb demo, ten sam interfejs
+books-api.js          wyszukiwanie w Open Library
+demo-data.js          przykładowe książki widoczne w trybie demo
+ui-rate.js             panel „Oceń” — szukaj/dodaj/oceń, status per-osoba
+ui-sagas.js            panel „Sagi” — ręczne dodawanie/usuwanie sag
+ui-ranking.js          panel „Ranking”
+ui-tbr.js               panel „TBR”
+ui-draw.js              panel „Losowanie”
+app.js                  spina wszystko, przełącza zakładki
+logo.png          Wasze logo
 ```
 
-Model danych jest celowo prosty — **jedna kolekcja `books`** obsługuje i TBR, i przeczytane
-książki (pole `status`), a sagi to po prostu wspólna nazwa (`saga`) na kilku książkach —
-bez osobnej kolekcji. Druga kolekcja, `pickLists`, to pule do losowania.
+Model danych: **jedna kolekcja `books`** obsługuje i TBR, i przeczytane książki — każda
+osoba ma swój własny status (`readStatus.karolina` / `readStatus.ola`: `tbr` / `w trakcie`
+/ `przeczytana`), więc jedna z Was może skończyć książkę, zanim druga w ogóle zacznie.
+Druga kolekcja, `pickLists`, to pule do losowania. Trzecia, `sagas`, to lista sag —
+tworzona ręcznie w zakładce „Sagi” albo w locie przy ocenianiu książki — a przypisanie
+książki do sagi to po prostu nazwa (`saga`) zapisana na książce.
 
 ## Co dokładnie odzwierciedla apka (z notatek Karoliny)
 
 - **Ocenianie**: 13 kryteriów uniwersalnych + kryteria bonusowe zależne od gatunku
   (kryminał/thriller/horror, sci-fi/fantastyka, dark romance, młodzieżówka, romans,
   literatura faktu). Wynik = % → gwiazdki (co pół) → poziom zakładki (papierowa → złota).
+- **Status przeczytania jest osobny dla każdej z Was** — Karolina może mieć książkę
+  jako „przeczytana” (z oceną), a Ola w tym samym momencie „w trakcie” albo „do
+  przeczytania”. Ocenianie odblokowuje się osobno, gdy dana osoba oznaczy „przeczytana”.
 - **Format**: papier / ebook / audiobook, do zaznaczenia przy każdej książce.
-- **Sagi**: automatyczna średnia (Karolina/Ola) po nazwie serii.
+- **Sagi**: dodajesz ręcznie w zakładce „Sagi” (albo w locie przy ocenianiu) — automatyczna
+  średnia (Karolina/Ola) liczy się z książek przypisanych do danej sagi.
 - **Ranking**: Wspólny (książki przeczytane przez obie), Mój, Oli — filtrowany po gatunku.
 - **TBR**: dodajesz książkę, druga może zaznaczyć „chcę też” — wtedy wskakuje do wspólnej.
+  Kolumna zależy od statusu każdej osoby z osobna, więc gdy jedna skończy, książka
+  automatycznie znika z jej kolumny i zostaje tylko u drugiej.
 - **Losowanie**: dowolna liczba puli, losowanie jednej książki z wybranej puli.
 
 Motywy/tropy (np. fake dating) — zostawione na później, tak jak w notatkach; łatwo dodać
-jako kolejne pole tagów przy książce (`js/criteria-data.js` → `ALL_GENRES` to dobre miejsce
+jako kolejne pole tagów przy książce (`criteria-data.js` → `ALL_GENRES` to dobre miejsce
 żeby dorobić osobną listę `THEMES` analogicznie, kiedy będziecie gotowe).

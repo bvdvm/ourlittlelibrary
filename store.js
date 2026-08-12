@@ -1,5 +1,5 @@
 import { firebaseConfig, COLLECTIONS } from './config.js';
-import { DEMO_BOOKS, DEMO_PICK_LISTS } from './demo-data.js';
+import { DEMO_BOOKS, DEMO_PICK_LISTS, DEMO_SAGAS } from './demo-data.js';
 
 export let DEMO_MODE = true;
 let db = null;
@@ -8,10 +8,13 @@ let fs = null; // firestore functions namespace
 // --- stan demo (w pamięci, znika po odświeżeniu — bez localStorage) ---
 let demoBooks = JSON.parse(JSON.stringify(DEMO_BOOKS));
 let demoPickLists = JSON.parse(JSON.stringify(DEMO_PICK_LISTS));
+let demoSagas = JSON.parse(JSON.stringify(DEMO_SAGAS));
 const bookListeners = new Set();
 const pickListListeners = new Set();
+const sagaListeners = new Set();
 function notifyBooks() { bookListeners.forEach(cb => cb([...demoBooks])); }
 function notifyPickLists() { pickListListeners.forEach(cb => cb([...demoPickLists])); }
+function notifySagas() { sagaListeners.forEach(cb => cb([...demoSagas])); }
 function uid(prefix) { return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`; }
 
 export async function initStore() {
@@ -125,4 +128,38 @@ export async function deletePickList(id) {
     return;
   }
   await fs.deleteDoc(fs.doc(db, COLLECTIONS.pickLists, id));
+}
+
+// ---------------- SAGI ----------------
+
+export function subscribeSagas(callback) {
+  if (DEMO_MODE) {
+    sagaListeners.add(callback);
+    callback([...demoSagas]);
+    return () => sagaListeners.delete(callback);
+  }
+  const col = fs.collection(db, COLLECTIONS.sagas);
+  return fs.onSnapshot(col, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export async function addSaga(name) {
+  if (DEMO_MODE) {
+    const saga = { id: uid('saga'), name };
+    demoSagas.push(saga);
+    notifySagas();
+    return saga.id;
+  }
+  const ref = await fs.addDoc(fs.collection(db, COLLECTIONS.sagas), { name });
+  return ref.id;
+}
+
+export async function deleteSaga(id) {
+  if (DEMO_MODE) {
+    demoSagas = demoSagas.filter(s => s.id !== id);
+    notifySagas();
+    return;
+  }
+  await fs.deleteDoc(fs.doc(db, COLLECTIONS.sagas, id));
 }
