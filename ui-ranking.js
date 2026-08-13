@@ -5,8 +5,10 @@ import { USERS } from './config.js';
 let currentView = 'wspolny';
 let currentGenre = '';
 let latestBooks = [];
+let onOpenBook = () => {};
 
-export function initRankingPanel() {
+export function initRankingPanel(openBookCallback) {
+  onOpenBook = openBookCallback || (() => {});
   const genreSelect = document.getElementById('rankingGenreFilter');
   ALL_GENRES.forEach(g => {
     const opt = document.createElement('option');
@@ -51,8 +53,12 @@ function render() {
     return;
   }
 
-  list.innerHTML = rows.map((r, i) => `
-    <div class="ranking-row">
+  list.innerHTML = '';
+  rows.forEach((r, i) => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'ranking-row';
+    row.innerHTML = `
       <div class="rank-num">${i + 1}</div>
       <img src="${r.book.coverUrl || ''}" alt="" onerror="this.style.visibility='hidden'" />
       <div>
@@ -63,8 +69,10 @@ function render() {
         <span class="percent">${r.percent}%</span>
         ${r.stars !== null ? `<span class="stars">${starsToString(r.stars)}</span>` : ''}
       </div>
-    </div>
-  `).join('');
+    `;
+    row.addEventListener('click', () => onOpenBook(r.book));
+    list.appendChild(row);
+  });
 }
 
 function escapeHtml(s = '') { return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }

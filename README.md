@@ -20,14 +20,24 @@ Dopóki `config.js` nie ma poprawnego configu, apka sama przechodzi w **tryb dem
 (przykładowe książki, nic się nie zapisuje) — ale teraz to już nieaktualne, config jest
 wpięty na prawdziwe dane.
 
-## Wyszukiwarka książek — Open Library
+## Wyszukiwarka książek — dwa źródła naraz
 
-Wyszukiwarka przy dodawaniu książki korzysta z [Open Library](https://openlibrary.org)
-(projekt Internet Archive) — to darmowy odpowiednik TMDB dla książek: bez klucza, bez
-logowania, bez limitu do skonfigurowania. Ma słabsze okładki niż Google Books przy bardzo
-nowych/niszowych wydaniach, za to świetną bazę starszych i mniej popularnych tytułów.
-Jeśli jakiejś książki nie znajdzie, zawsze można dodać ją ręcznie ("nie ma na liście?
-dodaj ręcznie").
+Przy dodawaniu książki apka pyta **dwa źródła równolegle** i łączy wyniki w jedną listę:
+
+1. **[Open Library](https://openlibrary.org)** (projekt Internet Archive) — ogromna,
+   międzynarodowa baza, ma okładki, ale jest tworzona głównie przez anglojęzyczną
+   społeczność, więc polscy autorzy i polskie wydania są w niej słabiej pokryte.
+2. **[Biblioteka Narodowa](https://data.bn.org.pl)** — oficjalny, darmowy, bez klucza
+   katalog polskiej bibliografii narodowej (największa taka baza w Polsce). Dużo lepiej
+   pokrywa polskie tytuły, ale to surowe dane biblioteczne (format MARC) i **bez okładek**
+   — książki z tego źródła pokażą się na liście bez zdjęcia, to normalne.
+
+Jeśli jedno źródło nie odpowie (np. przez chwilową awarię), drugie i tak zwraca wyniki —
+wyszukiwanie nie wywala się w całości. **Uwaga:** integrację z Biblioteką Narodową
+napisałem na podstawie dokumentacji, ale nie mogłem jej przetestować na żywo (moje
+środowisko robocze nie ma dostępu do internetu). Jeśli po wdrożeniu wyszukiwanie polskich
+tytułów nadal nie daje wyników mimo dobrego połączenia, sprawdźcie konsolę przeglądarki
+(F12) — jeśli pojawi się błąd przy `data.bn.org.pl`, wklejcie go, dokończę.
 
 ## Wrzuć na GitHub Pages
 
@@ -52,7 +62,7 @@ config.js            <- TU wklejasz Firebase config
 criteria-data.js     19 kryteriów oceniania (uniwersalne + bonusowe wg gatunku), z notatek
 rating.js             liczenie % / gwiazdek / poziomu zakładki
 store.js               warstwa danych: Firestore albo tryb demo, ten sam interfejs
-books-api.js          wyszukiwanie w Open Library
+books-api.js          wyszukiwanie: Open Library + Biblioteka Narodowa naraz
 demo-data.js          przykładowe książki widoczne w trybie demo
 ui-rate.js             panel „Oceń” — szukaj/dodaj/oceń, status per-osoba
 ui-sagas.js            panel „Sagi” — ręczne dodawanie/usuwanie sag
@@ -86,6 +96,11 @@ książki do sagi to po prostu nazwa (`saga`) zapisana na książce.
   Kolumna zależy od statusu każdej osoby z osobna, więc gdy jedna skończy, książka
   automatycznie znika z jej kolumny i zostaje tylko u drugiej.
 - **Losowanie**: dowolna liczba puli, losowanie jednej książki z wybranej puli.
+- **Każdą książkę można otworzyć w każdej chwili** — klik w wiersz w Rankingu, w
+  pigułkę w Sagach, albo z listy „Wasze książki” w zakładce Oceń (przeszukiwalnej po
+  tytule/autorze) — pokazuje pełny formularz z ocenami obu osób, statusem i
+  możliwością zaznaczenia „chcę przeczytać” dla siebie, nawet jeśli druga osoba już
+  ocenę wystawiła.
 
 Motywy/tropy (np. fake dating) — zostawione na później, tak jak w notatkach; łatwo dodać
 jako kolejne pole tagów przy książce (`criteria-data.js` → `ALL_GENRES` to dobre miejsce

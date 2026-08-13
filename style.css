@@ -247,12 +247,13 @@ label { font-size: 12.5px; color: var(--text-dim); font-weight: 600; letter-spac
   border: 1px solid var(--hairline);
   background: var(--surface-2);
   text-align: left;
+  color: var(--text);
 }
 .search-result img { width: 34px; height: 50px; object-fit: cover; border-radius: 3px; background: var(--surface-3); flex-shrink: 0; }
 .search-result .meta { flex: 1; min-width: 0; }
-.search-result .meta .t { font-weight: 600; font-size: 13.5px; }
-.search-result .meta .a { color: var(--text-dim); font-size: 12px; }
-.search-result:hover { border-color: var(--silver); }
+.search-result .meta .t { font-weight: 700; font-size: 14.5px; color: var(--text); }
+.search-result .meta .a { color: var(--text-dim); font-size: 12px; margin-top: 2px; }
+.search-result:hover { border-color: var(--silver); background: var(--surface-3); }
 
 .manual-toggle { text-align: center; margin-top: 10px; }
 .manual-toggle button { background: none; border: none; color: var(--text-faint); font-size: 12.5px; text-decoration: underline; }
@@ -320,7 +321,8 @@ label { font-size: 12.5px; color: var(--text-dim); font-weight: 600; letter-spac
 .saga-card h3 { margin: 0; font-family: var(--font-serif); font-size: 19px; }
 .saga-card .saga-avg-row { display: flex; gap: 14px; font-size: 12.5px; color: var(--text-dim); }
 .saga-books { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.saga-book-pill { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; background: var(--surface-3); color: var(--text-dim); }
+.saga-book-pill { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; background: var(--surface-3); color: var(--text-dim); border: 1px solid transparent; font-family: inherit; cursor: pointer; transition: border-color 0.12s ease, color 0.12s ease; }
+.saga-book-pill:hover { border-color: var(--gold); color: var(--text); }
 
 /* ---------------------------------- Ranking ---------------------------------- */
 
@@ -335,10 +337,17 @@ label { font-size: 12.5px; color: var(--text-dim); font-weight: 600; letter-spac
   border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--hairline);
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.12s ease, transform 0.08s ease;
 }
+.ranking-row:hover { border-color: var(--gold); transform: translateY(-1px); }
 .ranking-row .rank-num { font-family: var(--font-mono); color: var(--text-faint); text-align: center; }
 .ranking-row img { width: 34px; height: 48px; object-fit: cover; border-radius: 3px; background: var(--surface-3); }
-.ranking-row .rr-title { font-weight: 600; font-size: 14px; }
+.ranking-row .rr-title { font-weight: 700; font-size: 14px; color: var(--text); }
 .ranking-row .rr-author { font-size: 12px; color: var(--text-dim); }
 .ranking-row .rr-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 

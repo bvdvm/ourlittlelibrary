@@ -1,5 +1,5 @@
 import { initStore, subscribeBooks, subscribePickLists, subscribeSagas, DEMO_MODE } from './store.js';
-import { initRatePanel, refreshTbrShortcut, openBookForRating } from './ui-rate.js';
+import { initRatePanel, refreshBookList, openBookForRating } from './ui-rate.js';
 import { initSagasPanel, renderSagas } from './ui-sagas.js';
 import { initRankingPanel, renderRanking } from './ui-ranking.js';
 import { initTbrPanel, renderTBR } from './ui-tbr.js';
@@ -12,7 +12,12 @@ let sagas = [];
 function switchTab(panelKey) {
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${panelKey}`));
   document.querySelectorAll('.bookmark-tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.panel === panelKey)));
-  if (panelKey === 'ocen') refreshTbrShortcut();
+  if (panelKey === 'ocen') refreshBookList();
+}
+
+function openBookFromElsewhere(book) {
+  switchTab('ocen');
+  openBookForRating(book);
 }
 
 function setupNav() {
@@ -43,15 +48,15 @@ function rerenderAll() {
   renderRanking(books);
   renderTBR(books);
   renderDraw(books, pickLists);
-  refreshTbrShortcut();
+  refreshBookList();
 }
 
 async function main() {
   setupNav();
-  initRankingPanel();
+  initRankingPanel(openBookFromElsewhere);
   initDrawPanel();
-  initSagasPanel();
-  initTbrPanel(book => { switchTab('ocen'); openBookForRating(book); });
+  initSagasPanel(openBookFromElsewhere);
+  initTbrPanel(openBookFromElsewhere);
   initRatePanel(() => books, () => sagas);
 
   const { demo } = await initStore();

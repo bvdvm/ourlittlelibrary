@@ -9,6 +9,9 @@ let getSagas = () => [];
 let draft = null;        // książka w trakcie edycji
 let draftScores = {};    // { karolina: {critId: pts}, ola: {critId: pts} }
 let activeUser = USERS[0].id;
+let bookListFilter = '';
+
+const STATUS_ICON = { przeczytana: '✓', 'w trakcie': '…', tbr: '○' };
 
 function blankDraft() {
   return {
@@ -37,8 +40,8 @@ export function initRatePanel(booksGetter, sagasGetter) {
         const results = await searchBooks(q);
         renderSearchResults(results, resultsBox);
       } catch (err) {
-        console.error('Google Books search failed:', err);
-        resultsBox.innerHTML = '<p class="empty-note">Nie udało się połączyć z Google Books. Możesz dodać książkę ręcznie.<br><span style="opacity:.7;">Szczegóły błędu: konsola przeglądarki (F12).</span></p>';
+        console.error('Wyszukiwanie książek nie powiodło się:', err);
+        resultsBox.innerHTML = '<p class="empty-note">Nie udało się połączyć z wyszukiwarką książek. Możesz dodać książkę ręcznie.<br><span style="opacity:.7;">Szczegóły błędu: konsola przeglądarki (F12).</span></p>';
       }
     }, 380);
   });
@@ -49,20 +52,48 @@ export function initRatePanel(booksGetter, sagasGetter) {
     startDraft(blankDraft());
   });
 
-  refreshTbrShortcut();
+  refreshBookList();
 }
 
-export function refreshTbrShortcut() {
-  const host = document.getElementById('tbrShortcut');
+// Pełna, zawsze widoczna, przeszukiwalna lista wszystkich książek — kliknięcie otwiera podgląd/edycję
+export function refreshBookList() {
+  const host = document.getElementById('bookListSection');
   if (!host) return;
-  // książki, które choć jedna z Was jeszcze nie skończyła
-  const pending = getBooks().filter(b => Object.values(b.readStatus || {}).some(s => s !== 'przeczytana'));
-  if (pending.length === 0 || draft) { host.innerHTML = ''; return; }
-  host.innerHTML = `<div class="card" style="margin-bottom:20px;"><label>Masz książki w trakcie / do przeczytania — oceń teraz</label><div class="chip-row" style="margin-top:8px;"></div></div>`;
-  const row = host.querySelector('.chip-row');
-  pending.forEach(b => {
+  if (draft) { host.innerHTML = ''; return; }
+
+  const all = getBooks();
+  if (all.length === 0) { host.innerHTML = ''; return; }
+
+  const q = bookListFilter.trim().toLowerCase();
+  const filtered = q ? all.filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)) : all;
+  const sorted = [...filtered].sort((a, b) => a.title.localeCompare(b.title, 'pl'));
+
+  host.innerHTML = `
+    <div class="card" style="margin-bottom:20px;">
+      <label>Wasze książki (${all.length}) — kliknij, żeby zobaczyć lub edytować</label>
+      <input type="text" id="bookListFilter" placeholder="filtruj po tytule/autorze…" value="${escapeAttr(bookListFilter)}" style="margin-top:8px;" />
+      <div class="chip-row" id="bookListRows" style="margin-top:10px;"></div>
+    </div>
+  `;
+  document.getElementById('bookListFilter').addEventListener('input', e => {
+    bookListFilter = e.target.value;
+    refreshBookList();
+    // zachowaj fokus i pozycję kursora po re-renderze
+    const input = document.getElementById('bookListFilter');
+    input.focus();
+    input.selectionStart = input.selectionEnd = input.value.length;
+  });
+
+  const row = document.getElementById('bookListRows');
+  if (sorted.length === 0) {
+    row.innerHTML = '<p class="empty-note">Nic nie pasuje do filtra.</p>';
+    return;
+  }
+  sorted.forEach(b => {
+    const rs = b.readStatus || {};
     const chip = document.createElement('button');
-    chip.className = 'chip'; chip.type = 'button'; chip.textContent = b.title;
+    chip.className = 'chip'; chip.type = 'button';
+    chip.innerHTML = `${escapeHtml(b.title)} <span style="opacity:.65;">${USERS.map(u => `${u.emoji}${STATUS_ICON[rs[u.id]] || '○'}`).join(' ')}</span>`;
     chip.addEventListener('click', () => startDraft(JSON.parse(JSON.stringify(b))));
     row.appendChild(chip);
   });
@@ -93,6 +124,7 @@ function renderSearchResults(results, box) {
 function startDraft(book) {
   draft = book;
   if (!draft.readStatus) draft.readStatus = { [USERS[0].id]: 'tbr', [USERS[1].id]: 'tbr' };
+  if (!draft.wantToRead) draft.wantToRead = {};
   draftScores = {
     [USERS[0].id]: draft.ratings?.[USERS[0].id]?.scores ? { ...draft.ratings[USERS[0].id].scores } : {},
     [USERS[1].id]: draft.ratings?.[USERS[1].id]?.scores ? { ...draft.ratings[USERS[1].id].scores } : {},
@@ -102,6 +134,7 @@ function startDraft(book) {
 }
 
 function renderForm() {
+  refreshBookList();
   const container = document.getElementById('bookFormContainer');
   if (!draft) { container.innerHTML = ''; return; }
 
@@ -189,7 +222,7 @@ function renderForm() {
     formatBox.appendChild(chip);
   });
 
-  document.getElementById('cancelBtn').addEventListener('click', () => { draft = null; renderForm(); refreshTbrShortcut(); });
+  document.getElementById('cancelBtn').addEventListener('click', () => { draft = null; renderForm(); });
   document.getElementById('saveBtn').addEventListener('click', saveDraft);
 
   renderRaterBlock();
@@ -207,14 +240,22 @@ function renderRaterBlock() {
   const block = document.getElementById('raterBlock');
   if (!block) return;
   const criteria = criteriaForGenres(draft.genres);
+  const label = USERS.find(u => u.id === activeUser).label;
+  const status = draft.readStatus[activeUser];
 
   block.innerHTML = `
     <div class="rater-block">
       <div class="rater-user-tabs" id="raterUserTabs"></div>
       <div class="field-row" style="margin-top:2px;">
-        <label>Status (${USERS.find(u => u.id === activeUser).label})</label>
+        <label>Status (${label})</label>
         <div class="status-toggle" id="statusToggle"></div>
       </div>
+      ${status === 'tbr' ? `
+        <div class="field-row">
+          <label>Zainteresowanie (${label})</label>
+          <div class="chip-row" id="wantToggleRow"></div>
+        </div>
+      ` : ''}
       <div id="criteriaArea"></div>
     </div>
   `;
@@ -234,7 +275,7 @@ function renderRaterBlock() {
     const chip = document.createElement('button');
     chip.type = 'button'; chip.className = 'chip';
     chip.textContent = s.label;
-    chip.classList.toggle('active', draft.readStatus[activeUser] === s.id);
+    chip.classList.toggle('active', status === s.id);
     chip.addEventListener('click', () => {
       draft.readStatus[activeUser] = s.id;
       renderRaterBlock();
@@ -242,9 +283,27 @@ function renderRaterBlock() {
     statusBox.appendChild(chip);
   });
 
+  // "chcę przeczytać" — widoczne tylko dopóki ta osoba jeszcze nie zaczęła
+  const wantRow = document.getElementById('wantToggleRow');
+  if (wantRow) {
+    const want = draft.wantToRead[activeUser];
+    const opts = [{ v: true, l: 'chcę przeczytać' }, { v: false, l: 'nie teraz' }];
+    opts.forEach(o => {
+      const chip = document.createElement('button');
+      chip.type = 'button'; chip.className = 'chip';
+      chip.textContent = o.l;
+      chip.classList.toggle('active', want === o.v);
+      chip.addEventListener('click', () => {
+        draft.wantToRead[activeUser] = want === o.v ? null : o.v;
+        renderRaterBlock();
+      });
+      wantRow.appendChild(chip);
+    });
+  }
+
   const area = document.getElementById('criteriaArea');
-  if (draft.readStatus[activeUser] !== 'przeczytana') {
-    area.innerHTML = `<p class="empty-note" style="margin-top:10px;">Ocenianie odblokuje się, gdy ${USERS.find(u => u.id === activeUser).label} oznaczy książkę jako przeczytaną.</p>`;
+  if (status !== 'przeczytana') {
+    area.innerHTML = `<p class="empty-note" style="margin-top:10px;">Ocenianie odblokuje się, gdy ${label} oznaczy książkę jako przeczytaną.</p>`;
     return;
   }
   area.innerHTML = `<div id="criteriaList"></div><div class="rating-summary" id="ratingSummary"></div>`;
@@ -320,7 +379,6 @@ async function saveDraft() {
   else await addBook(payload);
   draft = null;
   renderForm();
-  refreshTbrShortcut();
 }
 
 function escapeHtml(s = '') { return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
