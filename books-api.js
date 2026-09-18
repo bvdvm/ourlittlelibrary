@@ -1,16 +1,22 @@
-// Dwa źródła równolegle:
+// Trzy źródła równolegle:
 //  - Open Library: szeroka baza międzynarodowa, ma okładki, ale słabiej pokrywa
-//    polskich autorów i polskie wydania (baza tworzona głównie przez
-//    anglojęzyczną społeczność).
+//    polskich autorów i polskie wydania.
 //  - Biblioteka Narodowa (data.bn.org.pl): oficjalny, darmowy, bez klucza katalog
 //    polskiej bibliografii narodowej — dużo lepsze pokrycie polskich tytułów,
-//    ale to surowe dane biblioteczne (MARC) i bez okładek.
-// Jeśli jedno źródło zawiedzie (np. błąd sieci), drugie i tak zwraca wyniki —
-// obie wyszukiwarki są niezależne, więc nic się nie wywala w całości.
+//    ale surowe dane biblioteczne (MARC) i bez okładek.
+//  - Google Books: najlepsze okładki, szeroka baza — ale BEZ KLUCZA jest w praktyce
+//    bezużyteczne (Google przycina nieautoryzowane zapytania do prawie zera, stąd
+//    wcześniejszy błąd połączenia). Z darmowym kluczem (GOOGLE_BOOKS_API_KEY w
+//    config.js) działa normalnie — 1000 zapytań/dzień, łatwo zwiększyć. Bez klucza
+//    ten fragment po prostu zwykle nic nie doda do wyników, ale się nie wywali.
+// Jeśli któreś źródło zawiedzie, pozostałe i tak zwracają wyniki — są niezależne.
+
+import { GOOGLE_BOOKS_API_KEY } from './config.js';
 
 const OL_BASE = 'https://openlibrary.org/search.json';
 const OL_COVERS_BASE = 'https://covers.openlibrary.org/b/id';
 const BN_BASE = 'https://data.bn.org.pl/api/institutions/bibs.json';
+const GB_BASE = 'https://www.googleapis.com/books/v1/volumes';
 
 async function searchOpenLibrary(query) {
   const params = new URLSearchParams({
@@ -83,26 +89,49 @@ async function searchBibliotekaNarodowa(query) {
   return records.map(parseBnRecord).filter(Boolean);
 }
 
+async function searchGoogleBooks(query) {
+  if (!GOOGLE_BOOKS_API_KEY) return []; // bez klucza pomijamy — patrz komentarz u góry pliku
+  const params = new URLSearchParams({ q: query, maxResults: '10', key: GOOGLE_BOOKS_API_KEY });
+  const res = await fetch(`${GB_BASE}?${params.toString()}`);
+  if (!res.ok) throw new Error(`Google Books: ${res.status} ${res.statusText}`);
+  const data = await res.json();
+  return (data.items || []).map(item => {
+    const v = item.volumeInfo || {};
+    return {
+      sourceId: item.id ? `gb-${item.id}` : '',
+      title: v.title || 'Bez tytułu',
+      author: (v.authors || []).join(', ') || 'Autor nieznany',
+      coverUrl: v.imageLinks ? (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail || '').replace('http://', 'https://') : '',
+      isbn: (v.industryIdentifiers || []).find(i => i.type === 'ISBN_13')?.identifier || '',
+      publishedYear: (v.publishedDate || '').slice(0, 4),
+    };
+  });
+}
+
 export async function searchBooks(query) {
   if (!query || query.trim().length < 2) return [];
 
-  const [olResult, bnResult] = await Promise.allSettled([
+  const [olResult, bnResult, gbResult] = await Promise.allSettled([
     searchOpenLibrary(query),
     searchBibliotekaNarodowa(query),
+    searchGoogleBooks(query),
   ]);
 
   if (olResult.status === 'rejected') console.warn('Open Library nie odpowiedziało:', olResult.reason);
   if (bnResult.status === 'rejected') console.warn('Biblioteka Narodowa nie odpowiedziała:', bnResult.reason);
+  if (gbResult.status === 'rejected') console.warn('Google Books nie odpowiedziało:', gbResult.reason);
 
-  if (olResult.status === 'rejected' && bnResult.status === 'rejected') {
+  if (olResult.status === 'rejected' && bnResult.status === 'rejected' && gbResult.status === 'rejected') {
     throw olResult.reason;
   }
 
   const ol = olResult.status === 'fulfilled' ? olResult.value : [];
   const bn = bnResult.status === 'fulfilled' ? bnResult.value : [];
+  const gb = gbResult.status === 'fulfilled' ? gbResult.value : [];
 
+  // Google Books ma najlepsze okładki — stawiamy je pierwsze, żeby wygrywały przy odsiewaniu duplikatów
   const seen = new Set();
-  const merged = [...ol, ...bn].filter(b => {
+  const merged = [...gb, ...ol, ...bn].filter(b => {
     const key = `${b.title.toLowerCase().trim()}::${b.author.toLowerCase().trim()}`;
     if (seen.has(key)) return false;
     seen.add(key);

@@ -22,17 +22,31 @@ function blankDraft() {
   };
 }
 
+// Buduje linki "sprawdź też" do zewnętrznych serwisów — zwykłe linki (nowa karta),
+// nie pobieramy stamtąd żadnych danych, więc nie ma tu żadnych problemów z regulaminami.
+function externalSearchLinksHtml(query) {
+  const q = (query || '').trim();
+  if (!q) return '';
+  const enc = encodeURIComponent(q);
+  return `
+    <a href="https://lubimyczytac.pl/szukaj/ksiazki?phrase=${enc}" target="_blank" rel="noopener">sprawdź na lubimyczytac.pl ↗</a>
+    <a href="https://www.goodreads.com/search?q=${enc}" target="_blank" rel="noopener">sprawdź na Goodreads ↗</a>
+  `;
+}
+
 export function initRatePanel(booksGetter, sagasGetter) {
   getBooks = booksGetter;
   getSagas = sagasGetter;
   const searchInput = document.getElementById('bookSearch');
   const resultsBox = document.getElementById('searchResults');
   const manualBtn = document.getElementById('manualAddBtn');
+  const externalLinks = document.getElementById('externalSearchLinks');
 
   let debounceTimer = null;
   searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     const q = searchInput.value.trim();
+    externalLinks.innerHTML = externalSearchLinksHtml(q);
     if (!q) { resultsBox.innerHTML = ''; return; }
     debounceTimer = setTimeout(async () => {
       resultsBox.innerHTML = '<p class="empty-note">Szukam…</p>';
@@ -141,10 +155,18 @@ function renderForm() {
   container.innerHTML = `
     <div class="book-form card">
       <div class="book-form-head">
-        <img class="cover-preview" src="${draft.coverUrl || ''}" alt="" onerror="this.style.visibility='hidden'" />
+        <div class="cover-edit">
+          <img class="cover-preview" id="coverPreview" src="${draft.coverUrl || ''}" alt="" onerror="this.style.visibility='hidden'" />
+          <button type="button" class="cover-edit-btn" id="coverEditBtn" title="Zmień okładkę">✎</button>
+        </div>
         <div class="fields">
           <input type="text" id="f-title" placeholder="Tytuł" value="${escapeAttr(draft.title)}" />
           <input type="text" id="f-author" placeholder="Autor" value="${escapeAttr(draft.author)}" />
+          <div class="book-form-external" id="formExternalLinks">${externalSearchLinksHtml(draft.title)}</div>
+          <div class="cover-url-row" id="coverUrlRow" style="display:${draft.coverUrl ? 'none' : 'flex'};">
+            <input type="text" id="f-cover-url" placeholder="Wklej adres URL okładki (np. skopiowany z Google Grafika)…" value="${escapeAttr(draft.coverUrl || '')}" />
+            <button type="button" class="btn btn-sm" id="clearCoverBtn">Usuń</button>
+          </div>
         </div>
       </div>
 
@@ -177,8 +199,32 @@ function renderForm() {
     </div>
   `;
 
-  document.getElementById('f-title').addEventListener('input', e => draft.title = e.target.value);
+  document.getElementById('f-title').addEventListener('input', e => {
+    draft.title = e.target.value;
+    document.getElementById('formExternalLinks').innerHTML = externalSearchLinksHtml(draft.title);
+  });
   document.getElementById('f-author').addEventListener('input', e => draft.author = e.target.value);
+
+  // edycja okładki (URL wklejony ręcznie przez użytkownika)
+  const coverPreview = document.getElementById('coverPreview');
+  const coverUrlRow = document.getElementById('coverUrlRow');
+  document.getElementById('coverEditBtn').addEventListener('click', () => {
+    const showing = coverUrlRow.style.display !== 'none';
+    coverUrlRow.style.display = showing ? 'none' : 'flex';
+    if (!showing) document.getElementById('f-cover-url').focus();
+  });
+  document.getElementById('f-cover-url').addEventListener('input', e => {
+    draft.coverUrl = e.target.value.trim();
+    coverPreview.style.visibility = 'visible';
+    coverPreview.src = draft.coverUrl;
+  });
+  document.getElementById('clearCoverBtn').addEventListener('click', () => {
+    draft.coverUrl = '';
+    document.getElementById('f-cover-url').value = '';
+    coverPreview.src = '';
+    coverPreview.style.visibility = 'hidden';
+    document.getElementById('f-cover-url').focus();
+  });
 
   // saga select
   populateSagaSelect();
