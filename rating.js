@@ -1,12 +1,14 @@
 import { UNIVERSAL_CRITERIA, bonusGroupsForGenres } from './criteria-data.js';
 
-// Zakładki (poziomy oceny) — kolory i progi dokładnie wg zasad Karoliny
+// Zakładki (poziomy oceny) — kolory i progi dokładnie wg zasad Karoliny.
+// Kolory dobrane tak, żeby żadne dwa sąsiednie poziomy nie zlewały się ze sobą
+// (drewniana jest teraz wyraźnie brązowa, nie żółtawa jak złota).
 export const BOOKMARK_TIERS = [
-  { min: 0, max: 29, id: 'paper', label: 'papierowa zakładka', color: '#c0392b', textColor: '#fdece9' },
-  { min: 30, max: 49, id: 'cardboard', label: 'kartonowa zakładka', color: '#d2691e', textColor: '#2b1400' },
-  { min: 50, max: 69, id: 'wood', label: 'drewniana zakładka', color: '#b8860b', textColor: '#2b1a00' },
-  { min: 70, max: 89, id: 'silver', label: 'srebrna zakładka', color: '#4caf6d', textColor: '#0d2412' },
-  { min: 90, max: 100, id: 'gold', label: 'złota zakładka', color: '#f4c430', textColor: '#2b1a00' },
+  { min: 0, max: 29, id: 'paper', label: 'papierowa zakładka', color: '#d33b2e', textColor: '#fdece9' },
+  { min: 30, max: 49, id: 'cardboard', label: 'kartonowa zakładka', color: '#e8791f', textColor: '#2b1400' },
+  { min: 50, max: 69, id: 'wood', label: 'drewniana zakładka', color: '#6b4226', textColor: '#f5e6d3' },
+  { min: 70, max: 89, id: 'silver', label: 'srebrna zakładka', color: '#2fa84f', textColor: '#eafdf0' },
+  { min: 90, max: 100, id: 'gold', label: 'złota zakładka', color: '#ffcc00', textColor: '#2b1a00' },
 ];
 
 // Przelicznik procent -> gwiazdki, dokładnie wg tabeli z notatek

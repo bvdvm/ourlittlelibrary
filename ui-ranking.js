@@ -74,7 +74,8 @@ function render() {
         ${r.perUser ? `<div class="rr-peruser">${USERS.map(u => `${u.emoji} ${r.perUser[u.id]}%`).join(' · ')}</div>` : ''}
       </div>
       <div class="rr-right">
-        <span><span class="tier-dot" style="background:${tier.color};" title="${tier.label}"></span><span class="percent">${r.percent}%</span></span>
+        <span class="tier-dot" style="background:${tier.color};" title="${tier.label}"></span>
+        <span class="percent">${r.percent}%</span>
         ${r.stars !== null ? `<span class="stars">${starsToString(r.stars)}</span>` : ''}
       </div>
     `;

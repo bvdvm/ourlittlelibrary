@@ -134,7 +134,9 @@ książki do sagi to po prostu nazwa (`saga`) zapisana na książce.
   przeczytania”. Ocenianie odblokowuje się osobno, gdy dana osoba oznaczy „przeczytana”.
 - **Format**: papier / ebook / audiobook, do zaznaczenia przy każdej książce.
 - **Sagi**: dodajesz ręcznie w zakładce „Sagi” (albo w locie przy ocenianiu) — automatyczna
-  średnia (Karolina/Ola) liczy się z książek przypisanych do danej sagi.
+  średnia (Karolina/Ola) liczy się z książek przypisanych do danej sagi. **Jedna książka
+  może należeć do kilku sag naraz** — przy ocenianiu wybierasz sagi jako chipsy (można
+  zaznaczyć kilka), a książka pojawi się na kartach wszystkich wybranych sag.
 - **Ranking**: Wspólny (książki przeczytane przez obie), Karolina, Ola — filtrowany po
   gatunku. W widoku wspólnym przy wyniku widać dodatkowo procent każdej z Was osobno
   (np. „🌙 84.6% · ☀️ 89.2%”), a każdy wiersz ma kolorowy pasek zakładki po lewej.
@@ -149,9 +151,13 @@ książki do sagi to po prostu nazwa (`saga`) zapisana na książce.
   każdej książce w puli widać teraz okładkę, gatunek i aktualną ocenę (kolor zakładki
   + %), więc łatwiej dobrać pulę na dany nastrój.
 - **Kolory zakładek widoczne wszędzie** — czerwona (0-29%), pomarańczowa (30-49%),
-  złota/drewniana (50-69%), zielona/srebrna (70-89%), złota (90-100%) — pojawiają się
-  jako kropka lub pasek przy ocenach, w Rankingu, Autorach, Sagach, liście książek,
-  TBR, Losowaniu i Profilach, więc na pierwszy rzut oka widać poziom książki.
+  brązowa/drewniana (50-69%), zielona/srebrna (70-89%), żółta/złota (90-100%) — dobrane
+  tak, żeby żaden kolor nie zlewał się z sąsiednim (drewniana jest wyraźnie brązowa, nie
+  żółtawa). Pojawiają się jako kropka lub pasek przy ocenach, w Rankingu, Autorach,
+  Sagach, liście książek, TBR, Losowaniu i Profilach.
+- **Gwiazdki większe i obok procentu** — w podsumowaniu oceny (i w Rankingu) wynik
+  procentowy i gwiazdki stoją teraz w jednej linii, większą czcionką, zamiast być
+  ułożone jedno pod drugim.
 - **Zasady oceniania**: nowa zakładka z pełną legendą (procent → zakładka → kolor →
   gwiazdki) i listą wszystkich 19 kryteriów (uniwersalnych + bonusowych wg gatunku) —
   ściąga, gdy nie pamiętacie co dokładnie oznacza dany poziom kryterium.

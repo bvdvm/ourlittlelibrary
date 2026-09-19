@@ -16,10 +16,18 @@ const STATUS_ICON = { przeczytana: '✓', 'w trakcie': '…', tbr: '○' };
 function blankDraft() {
   return {
     id: null, title: '', author: '', coverUrl: '', sourceId: '', isbn: '',
-    genres: [], format: null, saga: null, addedBy: USERS[0].id,
+    genres: [], format: null, sagas: [], addedBy: USERS[0].id,
     readStatus: { [USERS[0].id]: 'tbr', [USERS[1].id]: 'tbr' },
     wantToRead: {}, ratings: { [USERS[0].id]: null, [USERS[1].id]: null },
   };
+}
+
+// Książki zapisane przed wprowadzeniem wielu sag miały pojedyncze pole `saga` (tekst).
+// Dla zgodności wstecznej: jeśli `sagas` (tablica) jeszcze nie istnieje, budujemy ją z `saga`.
+function effectiveSagas(book) {
+  if (Array.isArray(book.sagas) && book.sagas.length) return book.sagas;
+  if (book.saga) return [book.saga];
+  return [];
 }
 
 // Buduje linki "sprawdź też" do zewnętrznych serwisów — zwykłe linki (nowa karta),
@@ -140,6 +148,8 @@ function startDraft(book) {
   draft = book;
   if (!draft.readStatus) draft.readStatus = { [USERS[0].id]: 'tbr', [USERS[1].id]: 'tbr' };
   if (!draft.wantToRead) draft.wantToRead = {};
+  draft.sagas = effectiveSagas(draft); // normalizacja: stare książki miały pojedyncze pole `saga`
+  delete draft.saga;
   draftScores = {
     [USERS[0].id]: draft.ratings?.[USERS[0].id]?.scores ? { ...draft.ratings[USERS[0].id].scores } : {},
     [USERS[1].id]: draft.ratings?.[USERS[1].id]?.scores ? { ...draft.ratings[USERS[1].id].scores } : {},
@@ -173,9 +183,9 @@ function renderForm() {
 
       <div class="two-col">
         <div class="field-row saga-field">
-          <label for="f-saga">Saga (opcjonalnie)</label>
-          <select id="f-saga"></select>
-          <div id="newSagaRow" style="display:flex;gap:6px;margin-top:6px;">
+          <label>Sagi (opcjonalnie, można wybrać kilka)</label>
+          <div class="chip-row" id="sagaChips"></div>
+          <div id="newSagaRow" style="display:flex;gap:6px;margin-top:8px;">
             <input type="text" id="f-new-saga" placeholder="+ nowa saga…" />
             <button type="button" class="btn btn-sm" id="addSagaInlineBtn">Dodaj</button>
           </div>
@@ -228,18 +238,17 @@ function renderForm() {
     document.getElementById('f-cover-url').focus();
   });
 
-  // saga select
-  populateSagaSelect();
-  document.getElementById('f-saga').addEventListener('change', e => { draft.saga = e.target.value || null; });
+  // sagi — wybór wielokrotny (chipsy)
+  populateSagaChips();
   document.getElementById('addSagaInlineBtn').addEventListener('click', async () => {
     const input = document.getElementById('f-new-saga');
     const name = input.value.trim();
     if (!name) return;
     const exists = getSagas().find(s => s.name.toLowerCase() === name.toLowerCase());
     if (!exists) await addSaga(name);
-    draft.saga = name;
+    if (!draft.sagas.some(s => s.toLowerCase() === name.toLowerCase())) draft.sagas = [...draft.sagas, name];
     input.value = '';
-    populateSagaSelect();
+    populateSagaChips();
   });
 
   // genre chips
@@ -286,12 +295,23 @@ function renderForm() {
   renderRaterBlock();
 }
 
-function populateSagaSelect() {
-  const select = document.getElementById('f-saga');
-  if (!select) return;
+function populateSagaChips() {
+  const box = document.getElementById('sagaChips');
+  if (!box) return;
   const sagas = getSagas();
-  select.innerHTML = '<option value="">— brak sagi —</option>' +
-    sagas.map(s => `<option value="${escapeAttr(s.name)}" ${draft.saga === s.name ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+  if (sagas.length === 0) { box.innerHTML = '<p class="empty-note">Nie macie jeszcze żadnej sagi — dodajcie pierwszą poniżej.</p>'; return; }
+  box.innerHTML = '';
+  sagas.forEach(s => {
+    const chip = document.createElement('button');
+    chip.type = 'button'; chip.className = 'chip';
+    chip.textContent = s.name;
+    chip.classList.toggle('active', draft.sagas.includes(s.name));
+    chip.addEventListener('click', () => {
+      draft.sagas = draft.sagas.includes(s.name) ? draft.sagas.filter(x => x !== s.name) : [...draft.sagas, s.name];
+      chip.classList.toggle('active');
+    });
+    box.appendChild(chip);
+  });
 }
 
 function renderRaterBlock() {
@@ -406,16 +426,16 @@ function updateSummary() {
     return;
   }
   box.innerHTML = `
-    <div>
-      <div class="big-percent">${result.percent}%</div>
+    <div class="rs-main">
+      <div class="rs-top">
+        <span class="big-percent">${result.percent}%</span>
+        <span class="stars big-stars">${starsToString(result.stars)}</span>
+      </div>
       <div class="sub">${result.scoredCount}/${result.totalCriteria} kryteriów ocenionych</div>
     </div>
-    <div style="text-align:right;">
-      <div class="stars" style="font-size:20px;">${starsToString(result.stars)}</div>
-      <span class="tier-badge" style="background:${result.tier.color};color:${result.tier.textColor};">
-        <span class="dot" style="background:${result.tier.textColor};"></span>${result.tier.label}
-      </span>
-    </div>
+    <span class="tier-badge" style="background:${result.tier.color};color:${result.tier.textColor};">
+      <span class="dot" style="background:${result.tier.textColor};"></span>${result.tier.label}
+    </span>
   `;
 }
 
@@ -430,7 +450,7 @@ async function saveDraft() {
   const payload = {
     title: draft.title.trim(), author: draft.author.trim() || 'Autor nieznany',
     coverUrl: draft.coverUrl || '', sourceId: draft.sourceId || '', isbn: draft.isbn || '',
-    genres: draft.genres, format: draft.format, saga: draft.saga || null,
+    genres: draft.genres, format: draft.format, sagas: draft.sagas || [],
     readStatus: draft.readStatus, addedBy: draft.addedBy, wantToRead: draft.wantToRead || {}, ratings,
   };
   if (draft.id) await updateBook(draft.id, payload);

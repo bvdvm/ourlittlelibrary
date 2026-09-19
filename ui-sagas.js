@@ -26,7 +26,8 @@ export function renderSagas(books, sagas) {
 
   grid.innerHTML = '';
   sagas.forEach(saga => {
-    const sagaBooks = books.filter(b => b.saga === saga.name);
+    // wsteczna zgodność: stare książki miały pojedyncze pole `saga` zamiast tablicy `sagas`
+    const sagaBooks = books.filter(b => (Array.isArray(b.sagas) && b.sagas.includes(saga.name)) || b.saga === saga.name);
     const perUserAvg = USERS.map(u => ({
       user: u,
       value: avg(sagaBooks.map(b => b.ratings?.[u.id]?.percent).filter(v => typeof v === 'number')),

@@ -8,7 +8,7 @@ export const DEMO_BOOKS = [
   {
     id: 'demo-1', title: 'Trzecie skrzydło', author: 'Rebecca Yarros',
     coverUrl: 'https://books.google.com/books/content?id=DEMO1&printsec=frontcover&img=1&zoom=1',
-    genres: ['Dark romance', 'Science fiction'], format: 'ebook', saga: 'Imperium Piorunów',
+    genres: ['Dark romance', 'Science fiction'], format: 'ebook', sagas: ['Imperium Piorunów'],
     readStatus: { karolina: 'przeczytana', ola: 'przeczytana' },
     addedBy: 'ola', wantToRead: { karolina: true, ola: true },
     ratings: {
@@ -19,7 +19,7 @@ export const DEMO_BOOKS = [
   {
     id: 'demo-2', title: 'Czwarte skrzydło', author: 'Rebecca Yarros',
     coverUrl: 'https://books.google.com/books/content?id=DEMO2&printsec=frontcover&img=1&zoom=1',
-    genres: ['Dark romance', 'Science fiction'], format: 'papier', saga: 'Imperium Piorunów',
+    genres: ['Dark romance', 'Science fiction'], format: 'papier', sagas: ['Imperium Piorunów', 'Ulubione zakończenia'],
     // przykład tego, o co prosił Adam: Karolina już przeczytała, Ola jeszcze nie (w trakcie)
     readStatus: { karolina: 'przeczytana', ola: 'w trakcie' },
     addedBy: 'karolina', wantToRead: { karolina: true, ola: true },
@@ -31,7 +31,7 @@ export const DEMO_BOOKS = [
   {
     id: 'demo-3', title: 'Piąta góra', author: 'Paulo Coelho',
     coverUrl: 'https://books.google.com/books/content?id=DEMO3&printsec=frontcover&img=1&zoom=1',
-    genres: ['Literatura faktu'], format: 'audiobook', saga: null,
+    genres: ['Literatura faktu'], format: 'audiobook', sagas: [],
     readStatus: { karolina: 'przeczytana', ola: 'tbr' },
     addedBy: 'karolina', wantToRead: { karolina: true, ola: false },
     ratings: {
@@ -42,7 +42,7 @@ export const DEMO_BOOKS = [
   {
     id: 'demo-4', title: 'Ludzie Śniegu', author: 'Marta Kisiel',
     coverUrl: 'https://books.google.com/books/content?id=DEMO4&printsec=frontcover&img=1&zoom=1',
-    genres: ['Fantastyka', 'Romans'], format: 'papier', saga: null,
+    genres: ['Fantastyka', 'Romans'], format: 'papier', sagas: [],
     readStatus: { karolina: 'tbr', ola: 'tbr' },
     addedBy: 'ola', wantToRead: { karolina: true, ola: true },
     ratings: { karolina: null, ola: null },
@@ -50,7 +50,7 @@ export const DEMO_BOOKS = [
   {
     id: 'demo-5', title: 'Cierń', author: 'Intisar Khanani',
     coverUrl: 'https://books.google.com/books/content?id=DEMO5&printsec=frontcover&img=1&zoom=1',
-    genres: ['Fantastyka', 'Młodzieżówka'], format: null, saga: null,
+    genres: ['Fantastyka', 'Młodzieżówka'], format: null, sagas: [],
     readStatus: { karolina: 'tbr', ola: 'tbr' },
     addedBy: 'karolina', wantToRead: { karolina: true, ola: null },
     ratings: { karolina: null, ola: null },
@@ -58,7 +58,7 @@ export const DEMO_BOOKS = [
   {
     id: 'demo-6', title: 'Cichy pacjent', author: 'Alex Michaelides',
     coverUrl: 'https://books.google.com/books/content?id=DEMO6&printsec=frontcover&img=1&zoom=1',
-    genres: ['Thriller'], format: null, saga: null,
+    genres: ['Thriller'], format: null, sagas: [],
     readStatus: { karolina: 'tbr', ola: 'tbr' },
     addedBy: 'ola', wantToRead: { karolina: null, ola: true },
     ratings: { karolina: null, ola: null },
@@ -68,6 +68,7 @@ export const DEMO_BOOKS = [
 export const DEMO_SAGAS = [
   { id: 'saga-1', name: 'Imperium Piorunów' },
   { id: 'saga-2', name: 'Cierń' },
+  { id: 'saga-3', name: 'Ulubione zakończenia' },
 ];
 
 export const DEMO_PICK_LISTS = [
