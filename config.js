@@ -29,8 +29,8 @@ export const COLLECTIONS = {
 // 2) UŻYTKOWNICZKI apki — na razie proste przełączanie "kim jestem"
 //    bez logowania (tak jak w KINEAPOLIS). Zmień etykiety jeśli trzeba.
 export const USERS = [
-  { id: 'karolina', label: 'Karolina', emoji: '🌙', color: 'var(--silver)' },
-  { id: 'ola', label: 'Ola', emoji: '☀️', color: 'var(--gold)' },
+  { id: 'karolina', label: 'Karolina', emoji: '🌙', color: 'var(--silver)', photo: 'karolina.jpg' },
+  { id: 'ola', label: 'Ola', emoji: '☀️', color: 'var(--gold)', photo: 'ola.jpg' },
 ];
 
 // 3) WYSZUKIWARKA KSIĄŻEK — Open Library i Biblioteka Narodowa działają od razu,

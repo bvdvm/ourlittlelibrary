@@ -1,5 +1,5 @@
 import { ALL_GENRES } from './criteria-data.js';
-import { starsToString } from './rating.js';
+import { starsToString, tierForPercent } from './rating.js';
 import { USERS } from './config.js';
 
 let currentView = 'wspolny';
@@ -38,7 +38,12 @@ function render() {
   if (currentView === 'wspolny') {
     rows = latestBooks
       .filter(b => b.ratings?.karolina && b.ratings?.ola)
-      .map(b => ({ book: b, percent: Math.round(((b.ratings.karolina.percent + b.ratings.ola.percent) / 2) * 10) / 10, stars: null }));
+      .map(b => ({
+        book: b,
+        percent: Math.round(((b.ratings.karolina.percent + b.ratings.ola.percent) / 2) * 10) / 10,
+        stars: null,
+        perUser: { karolina: b.ratings.karolina.percent, ola: b.ratings.ola.percent },
+      }));
   } else {
     rows = latestBooks
       .filter(b => b.ratings?.[currentView])
@@ -55,18 +60,21 @@ function render() {
 
   list.innerHTML = '';
   rows.forEach((r, i) => {
+    const tier = tierForPercent(r.percent);
     const row = document.createElement('button');
     row.type = 'button';
     row.className = 'ranking-row';
+    row.style.setProperty('--row-tier', tier.color);
     row.innerHTML = `
       <div class="rank-num">${i + 1}</div>
       <img src="${r.book.coverUrl || ''}" alt="" onerror="this.style.visibility='hidden'" />
       <div>
         <div class="rr-title">${escapeHtml(r.book.title)}</div>
         <div class="rr-author">${escapeHtml(r.book.author)}</div>
+        ${r.perUser ? `<div class="rr-peruser">${USERS.map(u => `${u.emoji} ${r.perUser[u.id]}%`).join(' · ')}</div>` : ''}
       </div>
       <div class="rr-right">
-        <span class="percent">${r.percent}%</span>
+        <span><span class="tier-dot" style="background:${tier.color};" title="${tier.label}"></span><span class="percent">${r.percent}%</span></span>
         ${r.stars !== null ? `<span class="stars">${starsToString(r.stars)}</span>` : ''}
       </div>
     `;

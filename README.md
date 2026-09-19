@@ -99,17 +99,22 @@ index.html            szkielet strony, zakładki-bookmarki jako nawigacja
 style.css          cały wygląd (czarno-złoto-srebrny motyw)
 config.js            <- TU wklejasz Firebase config
 criteria-data.js     19 kryteriów oceniania (uniwersalne + bonusowe wg gatunku), z notatek
-rating.js             liczenie % / gwiazdek / poziomu zakładki
+rating.js             liczenie % / gwiazdek / poziomu zakładki + kolory zakładek
 store.js               warstwa danych: Firestore albo tryb demo, ten sam interfejs
-books-api.js          wyszukiwanie: Open Library + Biblioteka Narodowa naraz
+books-api.js          wyszukiwanie: Open Library + Biblioteka Narodowa + Google Books naraz
 demo-data.js          przykładowe książki widoczne w trybie demo
-ui-rate.js             panel „Oceń” — szukaj/dodaj/oceń, status per-osoba
+ui-rate.js             panel „Oceń” — szukaj/dodaj/oceń/usuń, status per-osoba, edycja okładki
 ui-sagas.js            panel „Sagi” — ręczne dodawanie/usuwanie sag
 ui-ranking.js          panel „Ranking”
-ui-tbr.js               panel „TBR”
-ui-draw.js              panel „Losowanie”
+ui-authors.js          panel „Autorzy” — automatyczne grupowanie wg autora
+ui-tbr.js               panel „TBR” — z okładkami i „nie chcę czytać”
+ui-draw.js              panel „Losowanie” — z okładkami/ocenami/gatunkiem w puli
+ui-rules.js             panel „Zasady oceniania” — legenda kolorów + lista kryteriów
+ui-profiles.js          panel „Profile” — statystyki czytelnicze Karoliny i Oli
 app.js                  spina wszystko, przełącza zakładki
 logo.png          Wasze logo
+karolina.jpg       zdjęcie Karoliny (profil)
+ola.jpg            zdjęcie Oli (profil)
 ```
 
 Model danych: **jedna kolekcja `books`** obsługuje i TBR, i przeczytane książki — każda
@@ -130,14 +135,39 @@ książki do sagi to po prostu nazwa (`saga`) zapisana na książce.
 - **Format**: papier / ebook / audiobook, do zaznaczenia przy każdej książce.
 - **Sagi**: dodajesz ręcznie w zakładce „Sagi” (albo w locie przy ocenianiu) — automatyczna
   średnia (Karolina/Ola) liczy się z książek przypisanych do danej sagi.
-- **Ranking**: Wspólny (książki przeczytane przez obie), Mój, Oli — filtrowany po gatunku.
+- **Ranking**: Wspólny (książki przeczytane przez obie), Karolina, Ola — filtrowany po
+  gatunku. W widoku wspólnym przy wyniku widać dodatkowo procent każdej z Was osobno
+  (np. „🌙 84.6% · ☀️ 89.2%”), a każdy wiersz ma kolorowy pasek zakładki po lewej.
+- **Autorzy**: nowa zakładka — książki grupują się automatycznie wg autora (bez ręcznego
+  tagowania), z liczbą książek, średnią oceną (wspólną i osobno Karoliny/Oli) i listą
+  tytułów pod spodem, klikalnych tak jak wszędzie indziej.
 - **TBR**: dodajesz książkę, druga może zaznaczyć „chcę też” — wtedy wskakuje do wspólnej.
-  Kolumna zależy od statusu każdej osoby z osobna, więc gdy jedna skończy, książka
-  automatycznie znika z jej kolumny i zostaje tylko u drugiej.
-- **Losowanie**: dowolna liczba puli, losowanie jednej książki z wybranej puli.
+  Każda osoba ma osobne przyciski „chcę” / „nie chcę” — kliknięcie „nie chcę” chowa
+  książkę z jej kolumny na stałe (dopóki nie zmieni zdania i nie kliknie ponownie).
+  Karty mają teraz też okładkę i tagi gatunków.
+- **Losowanie**: dowolna liczba puli, losowanie jednej książki z wybranej puli. Przy
+  każdej książce w puli widać teraz okładkę, gatunek i aktualną ocenę (kolor zakładki
+  + %), więc łatwiej dobrać pulę na dany nastrój.
+- **Kolory zakładek widoczne wszędzie** — czerwona (0-29%), pomarańczowa (30-49%),
+  złota/drewniana (50-69%), zielona/srebrna (70-89%), złota (90-100%) — pojawiają się
+  jako kropka lub pasek przy ocenach, w Rankingu, Autorach, Sagach, liście książek,
+  TBR, Losowaniu i Profilach, więc na pierwszy rzut oka widać poziom książki.
+- **Zasady oceniania**: nowa zakładka z pełną legendą (procent → zakładka → kolor →
+  gwiazdki) i listą wszystkich 19 kryteriów (uniwersalnych + bonusowych wg gatunku) —
+  ściąga, gdy nie pamiętacie co dokładnie oznacza dany poziom kryterium.
+- **Profile**: nowa zakładka ze statystykami czytelniczymi Karoliny i Oli osobno —
+  zdjęcie, liczba przeczytanych/w trakcie/do przeczytania książek, średnia ocena,
+  ulubiony gatunek, ulubiony autor (najwyżej oceniany), rozkład zakładek (ile książek
+  w każdym kolorze) i lista najwyżej ocenionych książek. **Założenie:** nie miałem
+  dostępu do dokładnego wzoru profilu z Waszej strony filmowej (KINEAPOLIS) w tej
+  sesji, więc zbudowałem go od nowa w analogicznym duchu — dajcie znać, jeśli chcecie
+  dodać/zmienić któryś ze wskaźników.
+- **Usuwanie książki**: w formularzu edycji istniejącej książki (nie przy dodawaniu
+  nowej) jest przycisk „Usuń książkę” — kasuje ją na stałe z ocen, rankingu, sag,
+  autorów i list do losowania (z potwierdzeniem, żeby nie skasować przez pomyłkę).
 - **Każdą książkę można otworzyć w każdej chwili** — klik w wiersz w Rankingu, w
-  pigułkę w Sagach, albo z listy „Wasze książki” w zakładce Oceń (przeszukiwalnej po
-  tytule/autorze) — pokazuje pełny formularz z ocenami obu osób, statusem i
+  pigułkę w Sagach/Autorach, albo z listy „Wasze książki” w zakładce Oceń (przeszukiwalnej
+  po tytule/autorze) — pokazuje pełny formularz z ocenami obu osób, statusem i
   możliwością zaznaczenia „chcę przeczytać” dla siebie, nawet jeśli druga osoba już
   ocenę wystawiła.
 - **Okładkę można zmienić ręcznie** — przy dodawaniu i przy edycji każdej książki jest

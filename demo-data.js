@@ -12,8 +12,8 @@ export const DEMO_BOOKS = [
     readStatus: { karolina: 'przeczytana', ola: 'przeczytana' },
     addedBy: 'ola', wantToRead: { karolina: true, ola: true },
     ratings: {
-      karolina: { scores: scores({1:4,2:5,3:4,4:5,5:4,6:5,7:4,8:3,9:5,10:3,11:5,12:5,13:4,16:4}), percent: 84.6, stars: 4.5, tierId: 'leather' },
-      ola: { scores: scores({1:5,2:5,3:4,4:5,5:4,6:5,7:4,8:4,9:5,10:3,11:5,12:5,13:5,16:5}), percent: 89.2, stars: 4.5, tierId: 'leather' },
+      karolina: { scores: scores({1:4,2:5,3:4,4:5,5:4,6:5,7:4,8:3,9:5,10:3,11:5,12:5,13:4,16:4}), percent: 84.6, stars: 4.5, tierId: 'silver' },
+      ola: { scores: scores({1:5,2:5,3:4,4:5,5:4,6:5,7:4,8:4,9:5,10:3,11:5,12:5,13:5,16:5}), percent: 89.2, stars: 4.5, tierId: 'silver' },
     },
   },
   {

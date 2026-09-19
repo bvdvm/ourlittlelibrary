@@ -1,4 +1,5 @@
 import { addPickList, updatePickList, deletePickList } from './store.js';
+import { overallBookRating, starsToString } from './rating.js';
 
 let latestBooks = [];
 let latestLists = [];
@@ -47,9 +48,18 @@ function renderLists() {
     const pool = card.querySelector('.draw-pool');
     if (poolBooks.length === 0) pool.innerHTML = '<p class="empty-note">Pusta pula.</p>';
     poolBooks.forEach(b => {
-      const pill = document.createElement('span');
+      const overall = overallBookRating(b);
+      const pill = document.createElement('div');
       pill.className = 'pool-pill';
-      pill.innerHTML = `${escapeHtml(b.title)} <button type="button" aria-label="usuń">×</button>`;
+      pill.innerHTML = `
+        <img src="${b.coverUrl || ''}" alt="" onerror="this.style.visibility='hidden'" />
+        <div class="pp-meta">
+          <div class="pp-title">${escapeHtml(b.title)}</div>
+          ${(b.genres || []).length ? `<div class="pp-genres">${b.genres.map(escapeHtml).join(', ')}</div>` : ''}
+          ${overall ? `<div class="pp-rating"><span class="tier-dot" style="background:${overall.tier.color};"></span>${overall.percent}%${overall.stars ? ` · ${starsToString(overall.stars)}` : ''}</div>` : '<div class="pp-rating pp-rating-none">bez oceny</div>'}
+        </div>
+        <button type="button" aria-label="usuń">×</button>
+      `;
       pill.querySelector('button').addEventListener('click', async () => {
         await updatePickList(list.id, { bookIds: list.bookIds.filter(id => id !== b.id) });
       });
@@ -102,10 +112,13 @@ function drawFromSelected() {
       clearInterval(timer);
       resultBox.classList.remove('shuffling');
       const winner = poolBooks[Math.floor(Math.random() * poolBooks.length)];
+      const overall = overallBookRating(winner);
       resultBox.innerHTML = `
         <img src="${winner.coverUrl || ''}" alt="" onerror="this.style.visibility='hidden'" />
         <div class="dr-title">${escapeHtml(winner.title)}</div>
         <div class="dr-author">${escapeHtml(winner.author)}</div>
+        ${(winner.genres || []).length ? `<div class="dr-genres">${winner.genres.map(escapeHtml).join(', ')}</div>` : ''}
+        ${overall ? `<div class="dr-rating"><span class="tier-dot" style="background:${overall.tier.color};"></span>${overall.percent}%${overall.stars ? ` · ${starsToString(overall.stars)}` : ''}</div>` : ''}
       `;
     }
   }, 90);

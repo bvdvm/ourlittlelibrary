@@ -24,6 +24,8 @@
 
   --danger: #c0654f;
   --good: #7f9e6b;
+  --info: #5b8bb0;
+  --profile: #a5678f;
 
   --font-script: 'Caveat', cursive;
   --font-serif: 'Fraunces', serif;
@@ -149,6 +151,9 @@ button { font-family: inherit; cursor: pointer; }
 .bookmark-tab.tab-wood { --tab-color: var(--wood); --tab-ink: #f2e6d8; }
 .bookmark-tab.tab-leather { --tab-color: var(--leather); --tab-ink: #f2e6d8; }
 .bookmark-tab.tab-gold { --tab-color: var(--gold); --tab-ink: #241a06; }
+.bookmark-tab.tab-silver { --tab-color: var(--silver); --tab-ink: #16161d; }
+.bookmark-tab.tab-info { --tab-color: var(--info); --tab-ink: #eaf3fb; }
+.bookmark-tab.tab-profile { --tab-color: var(--profile); --tab-ink: #fbeaf3; }
 
 main { padding: 56px 0 100px; min-height: 40vh; }
 .panel { display: none; animation: fade-in 0.25s ease; }
@@ -227,6 +232,8 @@ label { font-size: 12.5px; color: var(--text-dim); font-weight: 600; letter-spac
 .tier-badge .dot { width: 9px; height: 9px; border-radius: 50%; }
 .stars { font-family: var(--font-mono); color: var(--gold-bright); letter-spacing: 1px; }
 .percent { font-family: var(--font-mono); font-weight: 500; color: var(--text-dim); font-size: 12.5px; }
+
+.tier-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; box-shadow: 0 0 0 1px rgba(0,0,0,0.25); }
 
 /* ---------------------------------- Oceń: search + form ---------------------------------- */
 
@@ -340,9 +347,10 @@ label { font-size: 12.5px; color: var(--text-dim); font-weight: 600; letter-spac
 
 .saga-card { display: flex; flex-direction: column; gap: 10px; }
 .saga-card h3 { margin: 0; font-family: var(--font-serif); font-size: 19px; }
-.saga-card .saga-avg-row { display: flex; gap: 14px; font-size: 12.5px; color: var(--text-dim); }
+.saga-card .saga-avg-row { display: flex; gap: 14px; font-size: 12.5px; color: var(--text-dim); align-items: center; }
+.saga-card .saga-avg-row span { display: inline-flex; align-items: center; }
 .saga-books { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.saga-book-pill { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; background: var(--surface-3); color: var(--text-dim); border: 1px solid transparent; font-family: inherit; cursor: pointer; transition: border-color 0.12s ease, color 0.12s ease; }
+.saga-book-pill { display: inline-flex; align-items: center; font-size: 11.5px; padding: 4px 10px; border-radius: 999px; background: var(--surface-3); color: var(--text-dim); border: 1px solid transparent; font-family: inherit; cursor: pointer; transition: border-color 0.12s ease, color 0.12s ease; }
 .saga-book-pill:hover { border-color: var(--gold); color: var(--text); }
 
 /* ---------------------------------- Ranking ---------------------------------- */
@@ -358,6 +366,7 @@ label { font-size: 12.5px; color: var(--text-dim); font-weight: 600; letter-spac
   border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--hairline);
+  border-left: 4px solid var(--row-tier, var(--hairline));
   width: 100%;
   text-align: left;
   color: var(--text);
@@ -365,21 +374,27 @@ label { font-size: 12.5px; color: var(--text-dim); font-weight: 600; letter-spac
   cursor: pointer;
   transition: border-color 0.12s ease, transform 0.08s ease;
 }
-.ranking-row:hover { border-color: var(--gold); transform: translateY(-1px); }
+.ranking-row:hover { border-color: var(--gold); border-left-color: var(--row-tier, var(--gold)); transform: translateY(-1px); }
 .ranking-row .rank-num { font-family: var(--font-mono); color: var(--text-faint); text-align: center; }
 .ranking-row img { width: 34px; height: 48px; object-fit: cover; border-radius: 3px; background: var(--surface-3); }
 .ranking-row .rr-title { font-weight: 700; font-size: 14px; color: var(--text); }
 .ranking-row .rr-author { font-size: 12px; color: var(--text-dim); }
+.ranking-row .rr-peruser { font-size: 11px; color: var(--text-faint); margin-top: 2px; font-family: var(--font-mono); }
 .ranking-row .rr-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.ranking-row .rr-right .tier-dot { margin-right: 0; }
 
 /* ---------------------------------- TBR ---------------------------------- */
 
 .tbr-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 .tbr-col h3 { font-family: var(--font-serif); font-size: 17px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
 .tbr-book { padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--hairline); margin-bottom: 8px; }
+.tbr-book .tb-head { display: flex; gap: 10px; margin-bottom: 8px; }
+.tbr-book .tb-cover { width: 40px; height: 58px; object-fit: cover; border-radius: 4px; background: var(--surface-3); flex-shrink: 0; }
 .tbr-book .tb-title { font-weight: 600; font-size: 13.5px; }
-.tbr-book .tb-author { font-size: 11.5px; color: var(--text-dim); margin-bottom: 6px; }
+.tbr-book .tb-author { font-size: 11.5px; color: var(--text-dim); }
+.tbr-book .tb-genres { font-size: 10.5px; color: var(--text-faint); margin-top: 2px; }
 .tbr-book .tb-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip.no-toggle.active { background: var(--danger); color: #2b0f0a; border-color: var(--danger); }
 .empty-note { color: var(--text-faint); font-size: 12.5px; padding: 10px 0; }
 
 /* ---------------------------------- Losowanie ---------------------------------- */
@@ -388,17 +403,84 @@ label { font-size: 12.5px; color: var(--text-dim); font-weight: 600; letter-spac
 .draw-list-card { display: flex; flex-direction: column; gap: 10px; }
 .draw-list-card .dl-head { display: flex; justify-content: space-between; align-items: center; }
 .draw-list-card .dl-head h3 { margin: 0; font-family: var(--font-serif); font-size: 17px; }
-.draw-pool { display: flex; flex-wrap: wrap; gap: 6px; }
-.pool-pill { font-size: 11.5px; padding: 5px 10px; border-radius: 999px; background: var(--surface-3); display: flex; align-items: center; gap: 6px; }
-.pool-pill button { background: none; border: none; color: var(--text-faint); font-size: 13px; line-height: 1; }
+.draw-pool { display: flex; flex-wrap: wrap; gap: 8px; }
+.pool-pill { font-size: 11.5px; padding: 6px; border-radius: 10px; background: var(--surface-3); display: flex; align-items: center; gap: 8px; max-width: 220px; }
+.pool-pill img { width: 30px; height: 44px; object-fit: cover; border-radius: 3px; background: var(--surface-2); flex-shrink: 0; }
+.pool-pill .pp-meta { min-width: 0; flex: 1; }
+.pool-pill .pp-title { font-weight: 600; font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pool-pill .pp-genres { font-size: 10px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pool-pill .pp-rating { font-size: 10.5px; color: var(--text-dim); display: flex; align-items: center; margin-top: 2px; }
+.pool-pill .pp-rating-none { opacity: 0.6; }
+.pool-pill button { background: none; border: none; color: var(--text-faint); font-size: 13px; line-height: 1; align-self: flex-start; }
 
 .draw-stage { max-width: 420px; margin: 0 auto; text-align: center; }
-.draw-result { min-height: 210px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.draw-result { min-height: 210px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .draw-result img { width: 110px; height: 158px; object-fit: cover; border-radius: 6px; box-shadow: var(--shadow-soft); }
 .draw-result .dr-title { font-family: var(--font-serif); font-weight: 700; font-size: 20px; margin-top: 6px; }
 .draw-result .dr-author { color: var(--text-dim); font-size: 13px; }
+.draw-result .dr-genres { color: var(--text-faint); font-size: 11.5px; }
+.draw-result .dr-rating { display: flex; align-items: center; font-size: 13px; color: var(--text-dim); }
 @keyframes shuffle { 0%,100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-4px) rotate(-2deg); } 75% { transform: translateY(-4px) rotate(2deg); } }
 .draw-result.shuffling { animation: shuffle 0.25s ease infinite; opacity: 0.6; }
+
+/* ---------------------------------- Autorzy ---------------------------------- */
+
+.author-card { display: flex; flex-direction: column; gap: 10px; }
+.author-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.author-head h3 { margin: 0; font-family: var(--font-serif); font-size: 18px; }
+.author-count { font-size: 11.5px; color: var(--text-faint); }
+.author-score { font-family: var(--font-mono); font-weight: 700; font-size: 13.5px; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+.author-score-none { background: var(--surface-3); color: var(--text-faint); font-weight: 500; font-size: 11px; }
+.author-peruser { display: flex; gap: 14px; font-size: 12.5px; color: var(--text-dim); }
+.author-books { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---------------------------------- Zasady oceniania ---------------------------------- */
+
+.tier-legend { display: grid; gap: 6px; }
+.tier-legend-row { display: grid; grid-template-columns: 80px 1fr auto; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+.tier-legend-row .tlr-range { font-family: var(--font-mono); font-size: 12.5px; }
+.tier-legend-row .tlr-stars { font-family: var(--font-mono); font-size: 13px; }
+
+.rule-criteria-list { display: grid; gap: 10px; }
+.rule-criterion { padding: 8px 0; border-bottom: 1px solid var(--hairline); }
+.rule-criterion:last-child { border-bottom: none; }
+.rule-criterion .rc-name { font-weight: 600; font-size: 13.5px; }
+.rule-criterion .rc-question { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+.rule-bonus-group { margin-bottom: 14px; }
+.rule-bonus-group:last-child { margin-bottom: 0; }
+.rule-bonus-group h4 { margin: 0 0 4px; font-family: var(--font-serif); font-size: 15px; color: var(--gold-bright); }
+
+/* ---------------------------------- Profile ---------------------------------- */
+
+.profile-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 22px; display: flex; flex-direction: column; gap: 18px; }
+.profile-head { display: flex; align-items: center; gap: 14px; }
+.profile-photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); background: var(--surface-3); }
+.profile-head h3 { margin: 0; font-family: var(--font-serif); font-size: 21px; }
+.profile-sub { font-size: 12.5px; color: var(--text-dim); }
+
+.profile-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; }
+.profile-stats-grid .pstat b { display: block; font-size: 19px; color: var(--gold-bright); font-family: var(--font-mono); font-weight: 500; }
+.profile-stats-grid .pstat span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); }
+
+.profile-facts { display: grid; gap: 8px; }
+.pfact { display: flex; justify-content: space-between; align-items: center; font-size: 13px; gap: 8px; }
+.pfact-label { color: var(--text-dim); }
+.pfact-value { font-weight: 600; display: flex; align-items: center; text-align: right; }
+
+.profile-tiers label, .profile-top label { font-size: 11.5px; color: var(--text-dim); font-weight: 600; letter-spacing: 0.02em; display: block; margin-bottom: 8px; }
+.tier-bars { display: grid; gap: 6px; }
+.tier-bar-row { display: grid; grid-template-columns: 70px 1fr 20px; align-items: center; gap: 8px; }
+.tier-bar-row .tbr-label { font-size: 11px; color: var(--text-faint); }
+.tier-bar-row .tbr-track { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.tier-bar-row .tbr-fill { height: 100%; border-radius: 999px; }
+.tier-bar-row .tbr-count { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); text-align: right; }
+
+.profile-top-list { display: grid; gap: 8px; }
+.profile-top-book { display: flex; gap: 10px; align-items: center; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 8px; padding: 6px; width: 100%; text-align: left; color: var(--text); font-family: inherit; cursor: pointer; }
+.profile-top-book:hover { border-color: var(--gold); }
+.profile-top-book img { width: 32px; height: 46px; object-fit: cover; border-radius: 3px; background: var(--surface-3); flex-shrink: 0; }
+.profile-top-book .ptb-title { font-weight: 600; font-size: 13px; }
+.profile-top-book .ptb-rating { font-size: 11.5px; color: var(--text-dim); display: flex; align-items: center; margin-top: 2px; }
 
 /* ---------------------------------- footer ---------------------------------- */
 
@@ -413,4 +495,6 @@ footer .moon-sun { font-size: 16px; letter-spacing: 6px; margin-bottom: 6px; }
   .book-form-head { flex-direction: column; }
   .bookmark-tab { min-width: 78px; padding: 12px 12px 18px; font-size: 12px; }
   .ranking-row { grid-template-columns: 20px 36px 1fr auto; gap: 10px; }
+  .profile-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .tier-legend-row { grid-template-columns: 66px 1fr auto; font-size: 12px; }
 }

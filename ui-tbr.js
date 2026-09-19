@@ -33,22 +33,43 @@ function renderTbrCard(book) {
   const rs = book.readStatus || {};
   const pendingUsers = USERS.filter(u => rs[u.id] === 'tbr');
   el.innerHTML = `
-    <div class="tb-title">${escapeHtml(book.title)}</div>
-    <div class="tb-author">${escapeHtml(book.author)}</div>
-    <div class="tb-actions">
-      ${pendingUsers.map(u => `<button type="button" class="chip btn-sm want-toggle" data-user="${u.id}">${u.emoji} ${w[u.id] === true ? 'chce' : 'chce?'}</button>`).join('')}
-      <button type="button" class="chip btn-sm rate-now">przeczytana → oceń</button>
+    <div class="tb-head">
+      <img class="tb-cover" src="${book.coverUrl || ''}" alt="" onerror="this.style.visibility='hidden'" />
+      <div>
+        <div class="tb-title">${escapeHtml(book.title)}</div>
+        <div class="tb-author">${escapeHtml(book.author)}</div>
+        ${(book.genres || []).length ? `<div class="tb-genres">${book.genres.map(escapeHtml).join(', ')}</div>` : ''}
+      </div>
     </div>
+    <div class="tb-actions" id="tbActions-${book.id}"></div>
   `;
-  el.querySelectorAll('.want-toggle').forEach(btn => {
-    const uid = btn.dataset.user;
-    btn.classList.toggle('active', w[uid] === true);
-    btn.addEventListener('click', async () => {
-      const next = { ...(book.wantToRead || {}), [uid]: w[uid] === true ? false : true };
+  const actions = el.querySelector(`#tbActions-${book.id}`);
+  pendingUsers.forEach(u => {
+    const uid = u.id;
+    const wantBtn = document.createElement('button');
+    wantBtn.type = 'button'; wantBtn.className = 'chip btn-sm want-toggle';
+    wantBtn.textContent = `${u.emoji} chcę`;
+    wantBtn.classList.toggle('active', w[uid] === true);
+    wantBtn.addEventListener('click', async () => {
+      const next = { ...(book.wantToRead || {}), [uid]: w[uid] === true ? null : true };
       await updateBook(book.id, { wantToRead: next });
     });
+    const noBtn = document.createElement('button');
+    noBtn.type = 'button'; noBtn.className = 'chip btn-sm no-toggle';
+    noBtn.textContent = `${u.emoji} nie chcę`;
+    noBtn.classList.toggle('active', w[uid] === false);
+    noBtn.addEventListener('click', async () => {
+      const next = { ...(book.wantToRead || {}), [uid]: w[uid] === false ? null : false };
+      await updateBook(book.id, { wantToRead: next });
+    });
+    actions.appendChild(wantBtn);
+    actions.appendChild(noBtn);
   });
-  el.querySelector('.rate-now').addEventListener('click', () => onRateNow(book));
+  const rateBtn = document.createElement('button');
+  rateBtn.type = 'button'; rateBtn.className = 'chip btn-sm rate-now';
+  rateBtn.textContent = 'przeczytana → oceń';
+  rateBtn.addEventListener('click', () => onRateNow(book));
+  actions.appendChild(rateBtn);
   return el;
 }
 

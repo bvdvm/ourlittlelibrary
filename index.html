@@ -29,11 +29,20 @@
   <button class="bookmark-tab tab-wood" data-panel="ranking" role="tab" aria-selected="false">
     <span class="tab-icon">🏆</span>Ranking
   </button>
+  <button class="bookmark-tab tab-silver" data-panel="autorzy" role="tab" aria-selected="false">
+    <span class="tab-icon">✒️</span>Autorzy
+  </button>
   <button class="bookmark-tab tab-leather" data-panel="tbr" role="tab" aria-selected="false">
     <span class="tab-icon">🔖</span>TBR
   </button>
   <button class="bookmark-tab tab-gold" data-panel="losowanie" role="tab" aria-selected="false">
     <span class="tab-icon">🎲</span>Losuj
+  </button>
+  <button class="bookmark-tab tab-info" data-panel="zasady" role="tab" aria-selected="false">
+    <span class="tab-icon">📏</span>Zasady
+  </button>
+  <button class="bookmark-tab tab-profile" data-panel="profile" role="tab" aria-selected="false">
+    <span class="tab-icon">👤</span>Profile
   </button>
 </nav>
 
@@ -79,13 +88,21 @@
       <div class="chip-row" id="rankingUserTabs">
         <button class="chip active" data-user="wspolny">Wspólny</button>
         <button class="chip" data-user="karolina">Karolina</button>
-        <button class="chip" data-user="ola">Oli</button>
+        <button class="chip" data-user="ola">Ola</button>
       </div>
       <select id="rankingGenreFilter">
         <option value="">Wszystkie gatunki</option>
       </select>
     </div>
     <div class="ranking-list" id="rankingList"></div>
+  </section>
+
+  <section id="panel-autorzy" class="panel">
+    <div class="panel-head">
+      <h2>Autorzy</h2>
+      <p>Automatycznie grupowane wg autora, z podsumowaniem ocen.</p>
+    </div>
+    <div class="grid grid-2" id="authorGrid"></div>
   </section>
 
   <section id="panel-tbr" class="panel">
@@ -119,6 +136,39 @@
         <p class="empty-note">Wybierz pulę i losuj 🎲</p>
       </div>
       <button class="btn btn-gold" id="drawBtn">Losuj książkę</button>
+    </div>
+  </section>
+
+  <section id="panel-zasady" class="panel">
+    <div class="panel-head">
+      <h2>Zasady oceniania</h2>
+      <p>Kategorie ocen, skala kolorów zakładek i gwiazdek — z notatek Karoliny.</p>
+    </div>
+
+    <div class="card" style="max-width:720px;margin:0 auto 24px;">
+      <label>Skala: procent → zakładka → gwiazdki</label>
+      <div class="tier-legend" id="rulesTierLegend" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card" style="max-width:720px;margin:0 auto 24px;">
+      <label>Kryteria uniwersalne (oceniane przy każdej książce)</label>
+      <div class="rule-criteria-list" id="rulesUniversalList" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card" style="max-width:720px;margin:0 auto;">
+      <label>Kryteria bonusowe (wg gatunku)</label>
+      <div id="rulesBonusList" style="margin-top:10px;"></div>
+    </div>
+  </section>
+
+  <section id="panel-profile" class="panel">
+    <div class="panel-head">
+      <h2>Profile</h2>
+      <p>Statystyki czytelnicze Karoliny i Oli.</p>
+    </div>
+    <div class="grid grid-2" style="max-width:900px;margin:0 auto;">
+      <div id="profile-karolina"></div>
+      <div id="profile-ola"></div>
     </div>
   </section>
 

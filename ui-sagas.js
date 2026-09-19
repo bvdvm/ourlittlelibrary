@@ -1,5 +1,6 @@
 import { USERS } from './config.js';
 import { addSaga, deleteSaga } from './store.js';
+import { tierForPercent, overallBookRating } from './rating.js';
 
 let onOpenBook = () => {};
 function avg(nums) { return nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10 : null; }
@@ -38,7 +39,10 @@ export function renderSagas(books, sagas) {
         <button type="button" class="btn btn-ghost btn-sm btn-danger delete-saga" aria-label="usuń sagę">usuń</button>
       </div>
       <div class="saga-avg-row">
-        ${perUserAvg.map(p => `<span>${p.user.emoji} ${p.value !== null ? p.value + '%' : '—'}</span>`).join('')}
+        ${perUserAvg.map(p => {
+          const tier = p.value !== null ? tierForPercent(p.value) : null;
+          return `<span>${tier ? `<span class="tier-dot" style="background:${tier.color};"></span>` : ''}${p.user.emoji} ${p.value !== null ? p.value + '%' : '—'}</span>`;
+        }).join('')}
       </div>
       <div class="saga-books" id="sagaBooks-${saga.id}">
         ${sagaBooks.length ? '' : '<span class="saga-book-pill">jeszcze bez książek</span>'}
@@ -46,10 +50,11 @@ export function renderSagas(books, sagas) {
     `;
     const booksBox = card.querySelector(`#sagaBooks-${saga.id}`);
     sagaBooks.forEach(b => {
+      const overall = overallBookRating(b);
       const pill = document.createElement('button');
       pill.type = 'button';
       pill.className = 'saga-book-pill';
-      pill.textContent = b.title;
+      pill.innerHTML = `${overall ? `<span class="tier-dot" style="background:${overall.tier.color};"></span>` : ''}${escapeHtml(b.title)}`;
       pill.addEventListener('click', () => onOpenBook(b));
       booksBox.appendChild(pill);
     });

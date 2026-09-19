@@ -4,6 +4,9 @@ import { initSagasPanel, renderSagas } from './ui-sagas.js';
 import { initRankingPanel, renderRanking } from './ui-ranking.js';
 import { initTbrPanel, renderTBR } from './ui-tbr.js';
 import { initDrawPanel, renderDraw } from './ui-draw.js';
+import { initAuthorsPanel, renderAuthors } from './ui-authors.js';
+import { initProfilesPanel, renderProfiles } from './ui-profiles.js';
+import { renderRules } from './ui-rules.js';
 
 let books = [];
 let pickLists = [];
@@ -48,6 +51,8 @@ function rerenderAll() {
   renderRanking(books);
   renderTBR(books);
   renderDraw(books, pickLists);
+  renderAuthors(books);
+  renderProfiles(books);
   refreshBookList();
 }
 
@@ -57,7 +62,10 @@ async function main() {
   initDrawPanel();
   initSagasPanel(openBookFromElsewhere);
   initTbrPanel(openBookFromElsewhere);
+  initAuthorsPanel(openBookFromElsewhere);
+  initProfilesPanel(openBookFromElsewhere);
   initRatePanel(() => books, () => sagas);
+  renderRules();
 
   const { demo } = await initStore();
   document.getElementById('demoBanner').hidden = !demo;

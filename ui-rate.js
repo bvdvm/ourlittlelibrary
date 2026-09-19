@@ -1,8 +1,8 @@
 import { searchBooks } from './books-api.js';
 import { ALL_GENRES, FORMATS } from './criteria-data.js';
-import { criteriaForGenres, calcRating, starsToString } from './rating.js';
+import { criteriaForGenres, calcRating, starsToString, overallBookRating } from './rating.js';
 import { USERS, READ_STATUSES } from './config.js';
-import { addBook, updateBook, addSaga } from './store.js';
+import { addBook, updateBook, addSaga, deleteBook } from './store.js';
 
 let getBooks = () => [];
 let getSagas = () => [];
@@ -105,9 +105,10 @@ export function refreshBookList() {
   }
   sorted.forEach(b => {
     const rs = b.readStatus || {};
+    const overall = overallBookRating(b);
     const chip = document.createElement('button');
     chip.className = 'chip'; chip.type = 'button';
-    chip.innerHTML = `${escapeHtml(b.title)} <span style="opacity:.65;">${USERS.map(u => `${u.emoji}${STATUS_ICON[rs[u.id]] || '○'}`).join(' ')}</span>`;
+    chip.innerHTML = `${overall ? `<span class="tier-dot" style="background:${overall.tier.color};"></span>` : ''}${escapeHtml(b.title)} <span style="opacity:.65;">${USERS.map(u => `${u.emoji}${STATUS_ICON[rs[u.id]] || '○'}`).join(' ')}</span>`;
     chip.addEventListener('click', () => startDraft(JSON.parse(JSON.stringify(b))));
     row.appendChild(chip);
   });
@@ -194,6 +195,7 @@ function renderForm() {
 
       <div class="form-actions">
         <button class="btn btn-ghost" id="cancelBtn" type="button">Anuluj</button>
+        ${draft.id ? '<button class="btn btn-ghost btn-danger" id="deleteBtn" type="button">Usuń książkę</button>' : ''}
         <button class="btn btn-gold" id="saveBtn" type="button">Zapisz książkę</button>
       </div>
     </div>
@@ -270,6 +272,16 @@ function renderForm() {
 
   document.getElementById('cancelBtn').addEventListener('click', () => { draft = null; renderForm(); });
   document.getElementById('saveBtn').addEventListener('click', saveDraft);
+  const deleteBtn = document.getElementById('deleteBtn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', async () => {
+      if (confirm(`Usunąć książkę "${draft.title}" na stałe? Zniknie z ocen, rankingu, sag i list do losowania.`)) {
+        await deleteBook(draft.id);
+        draft = null;
+        renderForm();
+      }
+    });
+  }
 
   renderRaterBlock();
 }
